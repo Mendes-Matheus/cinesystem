@@ -40,9 +40,6 @@ check_dependencies() {
         log_error "Codex CLI não encontrado. Instale com: npm install -g @openai/codex"
         exit 1
     fi
-    if ! command -v yq &>/dev/null && ! command -v python3 &>/dev/null; then
-        log_warn "yq ou python3 não encontrados — usando parser simples para o cabeçalho YAML"
-    fi
 }
 
 # ─── Lê os arquivos de contexto do cabeçalho YAML do prompt ──────────────────
@@ -225,6 +222,9 @@ run_chain() {
         prompts/features/auth/03-infrastructure.md
         prompts/features/auth/04-interface.md
     "
+    chains["admin"]="
+        prompts/features/admin/01-admin-controller.md
+    "
     chains["validacao"]="
         prompts/validation/validate-dependency-rule.md
         prompts/validation/generate-unit-tests.md
@@ -299,6 +299,7 @@ ${YELLOW}Chains disponíveis:${NC}
   fase3         Módulo Sessão completo
   fase4         Módulo Ingresso completo (com Outbox + Redis)
   fase5         Auth completo (JWT, login, cadastro)
+  admin         Painel administrativo (use cases + controller Admin)
   validacao     Auditoria de dependências + geração de testes
 
 EOF

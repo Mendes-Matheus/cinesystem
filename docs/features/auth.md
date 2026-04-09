@@ -59,9 +59,10 @@ public record CadastroCommand(String nome, String email, String senha) {}
 public record LoginCommand(String email, String senha) {}
 
 public record TokenResult(
-    String accessToken, String refreshToken,
-    Long expiresIn, String tipo
-) {}
+    String accessToken, String tokenType, Long expiresIn
+) {
+    // tokenType é sempre "Bearer"
+}}
 ```
 
 ### Comportamento de CadastrarUsuarioUseCaseImpl
@@ -115,6 +116,7 @@ Demais:     autenticado (qualquer role)
 ### AuthResponseDTO
 ```java
 public record AuthResponseDTO(
-    String accessToken, String tipo, Long expiresIn
+    String accessToken, String tokenType, Long expiresIn
 ) {}
 ```
+// tokenType é sempre "Bearer" — padronizado com TokenResult

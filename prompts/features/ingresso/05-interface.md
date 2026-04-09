@@ -17,13 +17,22 @@ public record ComprarIngressoRequestDTO(
 ) {}
 ```
 
-## IngressoResponseDTO.java
-- `record` que espelha todos os campos de `IngressoResult`
+## DTOs de resposta
+
+### IngressoBasicoResponseDTO.java
+- `record` espelhando `IngressoBasicoResult` — usado na resposta do POST (compra)
+- Campos: `id`, `codigo`, `valorPago`, `status`, `compradoEm`
+
+### IngressoResponseDTO.java
+- `record` espelhando `IngressoResult` — usado nas respostas de listagem e busca
+- Campos: `id`, `codigo`, `sessaoId`, `assentoId`, `fileira`, `numeroAssento`,
+  `tituloFilme`, `dataHora`, `valorPago`, `status`
 
 ## IngressoHttpMapper.java
 - `@Component`
 - `ComprarIngressoCommand toCommand(ComprarIngressoRequestDTO dto, Long usuarioId)`
   — `usuarioId` vem do `SecurityContextHolder`, não do body
+- `IngressoBasicoResponseDTO toBasicoResponse(IngressoBasicoResult result)`
 - `IngressoResponseDTO toResponse(IngressoResult result)`
 - `List<IngressoResponseDTO> toResponseList(List<IngressoResult> results)`
 
@@ -45,19 +54,24 @@ private Long getUsuarioAutenticado() {
 ### Endpoint POST /api/v1/ingressos
 - Extrai `usuarioId` via `getUsuarioAutenticado()`
 - Constrói `ComprarIngressoCommand` via mapper passando o `usuarioId`
-- Retorna 201 Created
+- Retorna `ResponseEntity<IngressoBasicoResponseDTO>` com status **201 Created**
 
 ### Endpoint DELETE /api/v1/ingressos/{id}
 - Constrói `CancelarIngressoCommand(new IngressoId(id), new UsuarioId(getUsuarioAutenticado()))`
-- Retorna 204 No Content
+- Retorna **204 No Content**
 
 ### Endpoint GET /api/v1/ingressos/meus
 - Chama `ListarMeusIngressosUseCase.execute(new UsuarioId(getUsuarioAutenticado()))`
-- Retorna 200 com lista
+- Retorna `ResponseEntity<List<IngressoResponseDTO>>` com status **200**
+
+### Endpoint GET /api/v1/ingressos/{id}
+- Chama `BuscarIngressoPorIdUseCase.execute(new IngressoId(id), new UsuarioId(getUsuarioAutenticado()))`
+- Retorna `ResponseEntity<IngressoResponseDTO>` com status **200**
 
 ## Checklist
 
 - [ ] `usuarioId` nunca vem do request body — sempre do contexto de segurança
 - [ ] Controller não injeta nenhuma implementação concreta
-- [ ] DELETE retorna 204
-- [ ] POST retorna 201
+- [ ] POST retorna `IngressoBasicoResponseDTO` (201) — não `IngressoResponseDTO`
+- [ ] GET `/meus` e GET `/{id}` retornam `IngressoResponseDTO` (200)
+- [ ] DELETE retorna 204 sem body

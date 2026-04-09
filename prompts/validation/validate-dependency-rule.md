@@ -14,7 +14,8 @@ da Regra de Dependência da Clean Architecture.
 ### Violações críticas (corrija imediatamente)
 
 1. Qualquer arquivo em `domain/` com import de:
-   - `org.springframework.*` (exceto `PasswordEncoder` em `Senha.java`)
+   - `org.springframework.*` **— EXCETO** `PasswordEncoder` em `Senha.java`
+     (exceção documentada em `docs/architecture/layer-rules.md`)
    - `jakarta.persistence.*`
    - Qualquer classe de `infrastructure/` ou `interfaces/`
 

@@ -78,7 +78,11 @@ com.cinesystem/
 │   │   │   ├── ComprarIngressoUseCase.java
 │   │   │   ├── ComprarIngressoUseCaseImpl.java  # usa Outbox + ReservaAssentoPort
 │   │   │   ├── CancelarIngressoUseCase.java
-│   │   │   └── CancelarIngressoUseCaseImpl.java
+│   │   │   ├── CancelarIngressoUseCaseImpl.java
+│   │   │   ├── ListarMeusIngressosUseCase.java
+│   │   │   ├── ListarMeusIngressosUseCaseImpl.java
+│   │   │   ├── BuscarIngressoPorIdUseCase.java
+│   │   │   └── BuscarIngressoPorIdUseCaseImpl.java
 │   │   └── dto/
 │   │       ├── ComprarIngressoCommand.java
 │   │       ├── CancelarIngressoCommand.java

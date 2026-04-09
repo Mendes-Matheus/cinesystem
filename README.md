@@ -41,7 +41,7 @@ chmod +x scripts/codex-run.sh
 │   │   └── admin.md                # Painel administrativo
 │   ├── database/
 │   │   ├── erd.md                  # ERD em Mermaid
-│   │   ├── tables.md               # DDL completo com migrations V1–V4
+│   │   ├── tables.md               # DDL completo com migrations
 │   │   └── indexes.md              # Índices com justificativas
 │   └── conventions/
 │       ├── naming.md               # Nomenclatura de classes, métodos, banco
@@ -56,8 +56,9 @@ chmod +x scripts/codex-run.sh
     ├── features/
     │   ├── filme/     01→04        # domain → application → infra → interface
     │   ├── sessao/    01→04
-    │   ├── ingresso/  01→05        # + outbox-scheduler
-    │   └── auth/      01→04
+    │   ├── ingresso/  01→05        # inclui outbox-scheduler
+    │   ├── auth/      01→04
+    │   └── admin/     01           # AdminController
     ├── database/
     │   ├── 01-migrations-base.md
     │   └── 02-migrations-outbox.md
@@ -141,7 +142,16 @@ RedisReservaAdapter, OutboxProcessorScheduler, seed de dados.
 ./scripts/codex-run.sh --chain fase5
 ```
 
-### Fase 6 — Validação e testes (~1 sessão)
+### Fase 6 — Admin (~1 sessão)
+
+```bash
+./scripts/codex-run.sh --chain admin
+```
+
+Cria: `DesativarUsuarioUseCase`, `RelatorioSessaoUseCase`, `ListarUsuariosUseCase`,
+`UsuarioQueryPort`, `UsuarioQueryAdapter` e `AdminController`.
+
+### Fase 7 — Validação e testes (~1 sessão)
 
 ```bash
 ./scripts/codex-run.sh --chain validacao

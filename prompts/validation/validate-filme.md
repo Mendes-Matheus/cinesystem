@@ -53,7 +53,7 @@ Testa invariantes da entidade sem nenhum mock:
 - Mock em `FilmeQueryPort` e `CachePort`
 - `deveRetornarDoCache_QuandoCacheHit()`
 - `deveConsultarBancoEPopularCache_QuandoCacheMiss()`
-- `deveFiltrارPorGenero_QuandoGeneroInformado()`
+- `deveFiltrarPorGenero_QuandoGeneroInformado()`
 
 ### CriarFilmeUseCaseTest.java (`application/filme/`)
 - Mock em `FilmeRepository`, `CachePort`, `ApplicationEventPublisher`

@@ -65,10 +65,10 @@ private final FilmeRepositoryAdapter filmeAdapter;
 ## 7. Nomenclatura de arquivos Flyway
 
 ```
-V1__create_core_tables.sql
-V2__create_outbox.sql
-V3__create_indexes.sql
-V4__seed_admin_user.sql
+V1__create_core_tables.sql   # tabelas principais
+V2__create_outbox.sql        # tabela outbox_events
+V3__create_indexes.sql       # todos os índices
+V5__seed_dev_data.sql        # seed de desenvolvimento (V4 reservado — nunca pule versões)
 ```
 
 ## 8. Strategy Pattern para pagamentos

@@ -9,9 +9,16 @@
 - Value Objects como `record` com validação no compact constructor
 - Interfaces de repositório (apenas assinatura — sem implementação)
 - `DomainException extends RuntimeException`
+- **Exceção documentada:** `Senha.java` pode importar
+  `org.springframework.security.crypto.password.PasswordEncoder`
+  exclusivamente para os métodos `criar()` e `matches()`.
+  Justificativa: BCrypt é uma função matemática de hash — não é
+  comportamento de framework. A alternativa (mover para `application/`)
+  vazaria lógica de proteção de senha para fora do domínio.
+  Nenhum outro Value Object ou Entidade pode importar Spring.
 
 ### Proibido
-- Qualquer import de `org.springframework.*`
+- Qualquer import de `org.springframework.*` (exceto `PasswordEncoder` em `Senha.java`)
 - Qualquer import de `jakarta.persistence.*`
 - Qualquer import de bibliotecas externas (Jackson, Lombok, etc.)
 

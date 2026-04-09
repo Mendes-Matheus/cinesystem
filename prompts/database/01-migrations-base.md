@@ -20,23 +20,10 @@ Conteúdo: seção "V2__create_outbox.sql" da documentação.
 ## V3__create_indexes.sql
 Conteúdo: seção "V3__create_indexes.sql" da documentação.
 
-## V4__seed_admin_user.sql
-Crie o usuário administrador padrão para desenvolvimento:
-```sql
-INSERT INTO usuario (nome, email, senha_hash, role, ativo)
-VALUES (
-    'Administrador',
-    'admin@cinesystem.com',
-    '$2a$12$placeholder_hash_substitua_em_producao',
-    'ADMIN',
-    true
-)
-ON CONFLICT (email) DO NOTHING;
-```
-
 ## Checklist
 
 - [ ] Arquivos nomeados exatamente com prefixo `V` + número + `__` + descrição + `.sql`
+- [ ] Versões criadas: V1, V2, V3 — NÃO criar V4 aqui (gerada no prompt `database/02-migrations-outbox.md`)
 - [ ] `CHECK (duracao_min > 0)` presente na tabela `filme`
 - [ ] `UNIQUE (sala_id, fileira, numero)` presente na tabela `assento`
 - [ ] `UNIQUE (sessao_id, assento_id)` presente na tabela `sessao_assento`

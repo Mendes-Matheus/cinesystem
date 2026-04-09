@@ -37,11 +37,10 @@ docs/
 │   └── layer-rules.md            # O que cada camada pode e não pode fazer
 ├── features/
 │   ├── filme.md                  # Domínio, use cases, endpoints e exemplos
-│   ├── sessao.md
-│   ├── assento.md
+│   ├── sessao.md                 # Sessões e assentos
 │   ├── ingresso.md               # Inclui Outbox Pattern e reserva Redis
 │   ├── auth.md                   # JWT, cadastro, login
-│   └── admin.md                  # CRUD administrativo
+│   └── admin.md                  # Painel administrativo
 ├── database/
 │   ├── erd.md                    # ERD completo em Mermaid
 │   ├── tables.md                 # DDL de todas as tabelas com tipos e constraints
@@ -107,16 +106,20 @@ prompts/features/ingresso/05-interface.md
 prompts/database/02-migrations-outbox.md
 ```
 
-### Fase 5 — Auth e Admin
+### Fase 5 — Auth
 ```
 prompts/features/auth/01-domain.md
 prompts/features/auth/02-application.md
 prompts/features/auth/03-infrastructure.md
 prompts/features/auth/04-interface.md
+```
+
+### Fase 6 — Admin
+```
 prompts/features/admin/01-admin-controller.md
 ```
 
-### Fase 6 — Validação e Testes
+### Fase 7 — Validação e Testes
 ```
 prompts/validation/validate-dependency-rule.md
 prompts/validation/generate-unit-tests.md

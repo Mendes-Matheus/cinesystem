@@ -47,7 +47,18 @@ public interface IngressoRepository {
 | Interface | Porta de entrada |
 |-----------|-----------------|
 | `ComprarIngressoUseCase` | `execute(ComprarIngressoCommand): IngressoResult` |
-| `CancelarIngressoUseCase` | `execute(CancelarIngressoCommand): IngressoResult` |
+| `CancelarIngressoUseCase` | `execute(CancelarIngressoCommand): void` |
+| `ListarMeusIngressosUseCase` | `execute(UsuarioId): List<IngressoResult>` |
+| `BuscarIngressoPorIdUseCase` | `execute(IngressoId, UsuarioId): IngressoResult` |
+
+**Comportamento de `ListarMeusIngressosUseCase`:**
+- Usa `IngressoQueryPort.findByUsuario(usuarioId)` — não carrega entidade `Ingresso`
+- Sem cache (dados pessoais devem ser frescos)
+
+**Comportamento de `BuscarIngressoPorIdUseCase`:**
+- Usa `IngressoQueryPort.findResultById(ingressoId)`
+- Valida que o ingresso pertence ao `usuarioId` informado → `DomainException("Acesso negado")` se não pertencer
+- Lança `ResourceNotFoundException` se não existir
 
 ### Commands
 ```java
@@ -61,14 +72,41 @@ public record ComprarIngressoCommand(
 public record CancelarIngressoCommand(IngressoId ingressoId, UsuarioId usuarioId) {}
 ```
 
-### Result
+### Results
+
+`IngressoResult` tem dois formatos dependendo do contexto de uso:
+
 ```java
+// IngressoResult — projeção completa vinda do IngressoQueryPort (leitura CQRS)
+// Campos de sessão/assento/filme são populados via JOIN na query — não via Ingresso
 public record IngressoResult(
     Long id, String codigo, Long sessaoId, Long assentoId,
     String fileira, int numeroAssento, String tituloFilme,
     LocalDateTime dataHora, BigDecimal valorPago, String status
-) {}
+) {
+    // Sem from(Ingresso) — este record é construído pela query JPA projetada,
+    // não a partir da entidade de domínio. Veja IngressoJpaRepository.findProjectedByUsuarioId()
+}
+
+// IngressoBasicoResult — projeção mínima retornada após a compra (apenas dados do Ingresso)
+public record IngressoBasicoResult(
+    Long id, String codigo, BigDecimal valorPago, String status, LocalDateTime compradoEm
+) {
+    public static IngressoBasicoResult from(Ingresso ingresso) {
+        return new IngressoBasicoResult(
+            ingresso.getId().valor(),
+            ingresso.getCodigo().valor(),
+            ingresso.getValorPago(),
+            ingresso.getStatus().name(),
+            ingresso.getCompradoEm()
+        );
+    }
+}
 ```
+
+**Regra de uso:**
+- `ComprarIngressoUseCase.execute()` retorna `IngressoBasicoResult` (construído a partir da entidade de domínio)
+- `ListarMeusIngressosUseCase.execute()` e `BuscarIngressoPorIdUseCase.execute()` retornam `IngressoResult` (construído pelo adaptador JPA via CQRS)
 
 ### Porta de leitura
 ```java

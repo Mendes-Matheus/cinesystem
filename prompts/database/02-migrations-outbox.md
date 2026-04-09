@@ -6,9 +6,9 @@ context:
 
 # Tarefa: Criar migration V4 e seed de dados de desenvolvimento
 
-## V4__seed_dev_data.sql
+## V5__seed_dev_data.sql
 
-Crie `src/main/resources/db/migration/V4__seed_dev_data.sql` com dados
+Crie `src/main/resources/db/migration/V5__seed_dev_data.sql` com dados
 de desenvolvimento para facilitar testes manuais:
 
 ```sql
@@ -95,4 +95,4 @@ SELECT COUNT(*) FROM assento a JOIN sala s ON a.sala_id = s.id WHERE s.nome = 'S
 - [ ] V4 usa `ON CONFLICT DO NOTHING` — idempotente (pode rodar várias vezes)
 - [ ] Hashes BCrypt são placeholders — documentar que devem ser trocados em produção
 - [ ] Script DO $$ gera assentos dinamicamente — não duplica se rodar novamente
-- [ ] Arquivo nomeado `V4__seed_dev_data.sql` (dois underscores entre versão e descrição)
+- [ ] Arquivo nomeado `V5__seed_dev_data.sql` (dois underscores entre versão e descrição)

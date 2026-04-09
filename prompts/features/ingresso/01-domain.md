@@ -14,15 +14,12 @@ Os arquivos de `domain/shared/` já existem (`DomainException`, `AggregateRoot`,
 ## domain/ingresso/
 
 ### IngressoId.java
-
 - `record IngressoId(Long valor)` — compact constructor rejeita null
 
 ### CodigoIngresso.java
-
 - `record CodigoIngresso(String valor)`
 - Compact constructor: rejeita null e blank com `DomainException("Código de ingresso inválido")`
 - Método estático de fábrica:
-  
   ```java
   public static CodigoIngresso gerar() {
       return new CodigoIngresso(UUID.randomUUID().toString());
@@ -30,14 +27,11 @@ Os arquivos de `domain/shared/` já existem (`DomainException`, `AggregateRoot`,
   ```
 
 ### StatusIngresso.java
-
 - `enum`: `ATIVO, UTILIZADO, CANCELADO, EXPIRADO`
 
 ### Ingresso.java
-
 - POJO puro — zero imports de framework
 - Campos:
-  
   ```
   IngressoId       id
   CodigoIngresso   codigo
@@ -62,7 +56,6 @@ Os arquivos de `domain/shared/` já existem (`DomainException`, `AggregateRoot`,
 - `equals()` e `hashCode()` baseados em `id`
 
 ### IngressoRepository.java
-
 ```java
 public interface IngressoRepository {
     Ingresso save(Ingresso ingresso);
@@ -76,18 +69,14 @@ public interface IngressoRepository {
 ## domain/pagamento/
 
 ### MetodoPagamento.java
-
 - `enum`: `CARTAO_CREDITO, CARTAO_DEBITO, PIX, BOLETO`
 
 ### StatusPagamento.java
-
 - `enum`: `PENDENTE, APROVADO, RECUSADO, ESTORNADO`
 
 ### Pagamento.java
-
 - POJO puro
 - Campos:
-  
   ```
   Long         id
   Long         ingressoId
@@ -106,7 +95,6 @@ public interface IngressoRepository {
   - Seta `status = ESTORNADO`
 
 ### PagamentoRepository.java
-
 ```java
 public interface PagamentoRepository {
     Pagamento save(Pagamento pagamento);
