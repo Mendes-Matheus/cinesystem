@@ -177,7 +177,10 @@ com.cinesystem/
     │   │   └── SessaoHttpMapper.java
     │   ├── ingresso/
     │   │   ├── IngressoController.java
-    │   │   ├── IngressoRequestDTO.java
+    │   │   ├── IngressoRequestDTO.java   IngressoBasicoResult IngressoResult IngressoBasicoResponseDTO
+    │   │   ├── IngressoBasicoResponseDTO.java
+    │   │   ├── IngressoBasicoResult.java
+    │   │   ├── IngressoResult.java
     │   │   ├── IngressoResponseDTO.java
     │   │   └── IngressoHttpMapper.java
     │   └── admin/
