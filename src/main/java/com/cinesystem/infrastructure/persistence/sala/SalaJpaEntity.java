@@ -1,15 +1,17 @@
-package com.cinesystem.infrastructure.persistence.usuario;
+package com.cinesystem.infrastructure.persistence.sala;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "usuario")
+@Table(name = "sala")
 @Getter
 @Setter
-public class UsuarioJpaEntity {
+public class SalaJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String nome;
 }
