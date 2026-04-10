@@ -1,7 +1,5 @@
 package com.cinesystem.domain.assento;
 
 public enum StatusAssento {
-    DISPONIVEL,
-    RESERVADO,
-    OCUPADO
+    DISPONIVEL, RESERVADO, OCUPADO, MANUTENCAO
 }

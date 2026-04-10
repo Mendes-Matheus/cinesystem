@@ -4,7 +4,7 @@
 
 Todo VO valida no compact constructor e lança `DomainException`.
 ```java
-public record FilmeId(Long valor) {
+public record FilmeId(Long id) {
     public FilmeId { Objects.requireNonNull(valor, "FilmeId não pode ser nulo"); }
 }
 ```

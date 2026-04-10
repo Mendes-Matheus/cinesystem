@@ -1,4 +1,10 @@
 package com.cinesystem.domain.sessao;
 
-public record SessaoId() {
+import com.cinesystem.domain.shared.DomainException;
+
+public record SessaoId(Long id) {
+    public SessaoId {
+        if (valor == null)
+            throw new DomainException("SessaoId não pode ser nulo");
+    }
 }

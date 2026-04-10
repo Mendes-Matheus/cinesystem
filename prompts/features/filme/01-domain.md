@@ -14,7 +14,7 @@ conforme especificado em `docs/features/filme.md`.
 ## Arquivos a criar
 
 ### FilmeId.java
-- `record FilmeId(Long valor)`
+- `record FilmeId(Long id)`
 - Compact constructor: rejeita null com `DomainException`
 
 ### Genero.java

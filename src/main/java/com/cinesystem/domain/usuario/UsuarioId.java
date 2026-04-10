@@ -1,4 +1,4 @@
 package com.cinesystem.domain.usuario;
 
-public record UsuarioId() {
+public record UsuarioId(Long id) {
 }

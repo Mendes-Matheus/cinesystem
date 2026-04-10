@@ -1,4 +1,9 @@
 package com.cinesystem.domain.ingresso;
 
-public record CodigoIngresso() {
+import java.util.UUID;
+
+public record CodigoIngresso(String valor) {
+    public static CodigoIngresso gerar() {
+        return new CodigoIngresso(UUID.randomUUID().toString());
+    }
 }

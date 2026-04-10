@@ -1,8 +1,5 @@
 package com.cinesystem.domain.sessao;
 
 public enum StatusSessao {
-    ATIVA,
-    LOTADA,
-    CANCELADA,
-    ENCERRADA
+    ATIVA, LOTADA, CANCELADA, ENCERRADA
 }

@@ -10,7 +10,7 @@ context:
 ## Arquivos a criar
 
 ### UsuarioId.java
-- `record UsuarioId(Long valor)` — rejeita null
+- `record UsuarioId(Long id)` — rejeita null
 
 ### Role.java
 - `enum`: `CLIENTE, ADMIN`

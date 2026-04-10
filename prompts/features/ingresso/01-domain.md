@@ -14,7 +14,7 @@ Os arquivos de `domain/shared/` já existem (`DomainException`, `AggregateRoot`,
 ## domain/ingresso/
 
 ### IngressoId.java
-- `record IngressoId(Long valor)` — compact constructor rejeita null
+- `record IngressoId(Long id)` — compact constructor rejeita null
 
 ### CodigoIngresso.java
 - `record CodigoIngresso(String valor)`

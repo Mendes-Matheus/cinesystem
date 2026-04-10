@@ -10,7 +10,7 @@ context:
 ## domain/assento/
 
 ### AssentoId.java
-- `record AssentoId(Long valor)` — rejeita null
+- `record AssentoId(Long id)` — rejeita null
 
 ### TipoAssento.java
 - `enum`: `STANDARD, VIP, ACESSIBILIDADE`
