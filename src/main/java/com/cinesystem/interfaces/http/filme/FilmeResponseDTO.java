@@ -1,4 +1,13 @@
 package com.cinesystem.interfaces.http.filme;
 
-public record FilmeResponseDTO() {
-}
+import java.time.LocalDate;
+
+public record FilmeResponseDTO(
+    Long id,
+    String titulo,
+    String genero,
+    String classificacao,
+    int duracaoMinutos,
+    String posterUrl,
+    LocalDate dataLancamento
+) {}
