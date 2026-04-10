@@ -20,7 +20,7 @@ Conteúdo: seção "V2__create_outbox.sql" da documentação.
 ## V3__create_indexes.sql
 Conteúdo: seção "V3__create_indexes.sql" da documentação.
 
-## Checklist
+## Checklist'
 
 - [ ] Arquivos nomeados exatamente com prefixo `V` + número + `__` + descrição + `.sql`
 - [ ] Versões criadas: V1, V2, V3 — NÃO criar V4 aqui (gerada no prompt `database/02-migrations-outbox.md`)

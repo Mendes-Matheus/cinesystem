@@ -1,17 +1,3 @@
----
-context:
-  - docs/database/tables.md
-  - docs/features/ingresso.md
----
-
-# Tarefa: Criar migration V4 e seed de dados de desenvolvimento
-
-## V4__seed_dev_data.sql
-
-Crie `src/main/resources/db/migration/V4__seed_dev_data.sql` com dados
-de desenvolvimento para facilitar testes manuais:
-
-```sql
 -- ─── Usuário Admin ───────────────────────────────────────────────────────────
 -- Senha: Admin@123 (hash BCrypt custo 12 — substituir em produção via variável)
 INSERT INTO usuario (nome, email, senha_hash, role, ativo)
@@ -66,33 +52,3 @@ BEGIN
         END LOOP;
     END LOOP;
 END $$;
-```
-
----
-
-## Verificação pós-migration
-
-Após aplicar as migrations, confirme via psql ou DBeaver:
-
-```sql
--- Deve retornar 2 usuários
-SELECT id, nome, email, role FROM usuario;
-
--- Deve retornar 3 filmes
-SELECT id, titulo, genero FROM filme WHERE ativo = true;
-
--- Deve retornar 3 salas
-SELECT id, nome, tipo, capacidade FROM sala;
-
--- Deve retornar 120 assentos para Sala 1
-SELECT COUNT(*) FROM assento a JOIN sala s ON a.sala_id = s.id WHERE s.nome = 'Sala 1';
-```
-
----
-
-## Checklist
-
-- [ ] V4 usa `ON CONFLICT DO NOTHING` — idempotente (pode rodar várias vezes)
-- [ ] Hashes BCrypt são placeholders — documentar que devem ser trocados em produção
-- [ ] Script DO $$ gera assentos dinamicamente — não duplica se rodar novamente
-- [ ] Arquivo nomeado `V4__seed_dev_data.sql` (dois underscores entre versão e descrição)

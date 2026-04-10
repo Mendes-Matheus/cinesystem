@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # =============================================================================
-# codex-run.sh — Wrapper para execução de prompts do CineSystem com Codex CLI
+# gemini-run.sh — Wrapper para execução de prompts do CineSystem com Gemini CLI
 #
 # Uso:
-#   ./scripts/codex-run.sh <caminho-do-prompt>
-#   ./scripts/codex-run.sh --dry-run <caminho-do-prompt>   (mostra contexto sem executar)
-#   ./scripts/codex-run.sh --list                          (lista todos os prompts disponíveis)
-#   ./scripts/codex-run.sh --chain fase2                   (executa todos os prompts de uma fase)
+#   ./scripts/gemini-run.sh <caminho-do-prompt>
+#   ./scripts/gemini-run.sh --dry-run <caminho-do-prompt>   (mostra contexto sem executar)
+#   ./scripts/gemini-run.sh --list                          (lista todos os prompts disponíveis)
+#   ./scripts/gemini-run.sh --chain fase2                   (executa todos os prompts de uma fase)
 #
 # Exemplos:
-#   ./scripts/codex-run.sh prompts/features/filme/01-domain.md
-#   ./scripts/codex-run.sh --dry-run prompts/features/ingresso/02-application.md
-#   ./scripts/codex-run.sh --chain scaffolding
+#   ./scripts/gemini-run.sh prompts/features/filme/01-domain.md
+#   ./scripts/gemini-run.sh --dry-run prompts/features/ingresso/02-application.md
+#   ./scripts/gemini-run.sh --chain scaffolding
 # =============================================================================
 
 set -euo pipefail
@@ -36,25 +36,18 @@ log_step()    { echo -e "\n${CYAN}━━━ $* ━━━${NC}\n"; }
 
 # ─── Verificações de dependência ─────────────────────────────────────────────
 check_dependencies() {
-    if ! command -v codex &>/dev/null; then
-        log_error "Codex CLI não encontrado. Instale com: npm install -g @openai/codex"
+    if ! command -v gemini &>/dev/null; then
+        log_error "Gemini CLI não encontrado. Instale com: npm install -g @google/gemini-cli"
         exit 1
     fi
 }
 
 # ─── Lê os arquivos de contexto do cabeçalho YAML do prompt ──────────────────
-# Formato esperado no topo do arquivo .md:
-#   ---
-#   context:
-#     - docs/architecture/clean-architecture.md
-#     - docs/features/filme.md
-#   ---
 parse_context_files() {
     local prompt_file="$1"
     local context_files=()
     local file_path=""
 
-    # Extrai o bloco frontmatter (entre os dois ---)
     local in_frontmatter=false
     local in_context=false
 
@@ -64,7 +57,7 @@ parse_context_files() {
                 in_frontmatter=true
                 continue
             else
-                break  # fim do frontmatter
+                break
             fi
         fi
 
@@ -107,7 +100,7 @@ validate_context_files() {
     $all_ok || exit 1
 }
 
-# ─── Monta a entrada composta para o codex exec ──────────────────────────────
+# ─── Monta a entrada composta para o Gemini CLI ──────────────────────────────
 build_exec_input() {
     local prompt_path="$1"
     shift
@@ -150,13 +143,11 @@ run_prompt() {
 
     log_step "Prompt: $prompt_file"
 
-    # Lê contexto do cabeçalho YAML
     local context_files
     mapfile -t context_files < <(parse_context_files "$full_prompt_path")
 
     if [[ ${#context_files[@]} -eq 0 ]]; then
         log_warn "Nenhum arquivo de contexto declarado no cabeçalho do prompt."
-        log_warn "Adicione um bloco 'context:' no frontmatter YAML do arquivo."
     else
         log_info "Contexto carregado (${#context_files[@]} arquivo(s)):"
         for f in "${context_files[@]}"; do
@@ -165,17 +156,21 @@ run_prompt() {
         validate_context_files "${context_files[@]}"
     fi
 
-    # Adiciona AGENT.md como contexto global obrigatório
     local agent_md="$PROJECT_ROOT/AGENT.md"
     if [[ -f "$agent_md" ]]; then
         context_files=("$agent_md" "${context_files[@]}")
     fi
 
+    local exec_input
+    exec_input="$(mktemp)"
+    build_exec_input "$full_prompt_path" "${context_files[@]}" > "$exec_input"
+
     if [[ "$dry_run" == "true" ]]; then
         echo ""
         log_warn "DRY-RUN — comando que seria executado:"
         echo ""
-        echo "  codex exec --full-auto --cd \"$PROJECT_ROOT\" -"
+        # Dependendo da versão, o Gemini CLI pode receber a entrada via stdin ou flag de arquivo
+        echo "  cat \"$exec_input\" | gemini --cwd \"$PROJECT_ROOT\""
         echo ""
         log_info "Arquivos incluídos na entrada composta:"
         for f in "${context_files[@]}"; do
@@ -185,25 +180,24 @@ run_prompt() {
         echo ""
         log_info "Conteúdo do prompt:"
         echo "────────────────────────────────────────"
-        cat "$full_prompt_path"
+        cat "$exec_input"
         echo "────────────────────────────────────────"
+        rm -f "$exec_input"
         return 0
     fi
 
-    local exec_input
-    exec_input="$(mktemp)"
-    build_exec_input "$full_prompt_path" "${context_files[@]}" > "$exec_input"
-
-    # Executa o codex
-    log_info "Executando Codex CLI..."
+    log_info "Executando Gemini CLI..."
     echo ""
 
-    if codex exec --full-auto --cd "$PROJECT_ROOT" - < "$exec_input"; then
+    # Executa o Gemini passando o contexto unificado. 
+    # Nota: Caso sua versão do Gemini CLI exija uma flag específica para aceitar o prompt via stdin, adicione-a aqui.
+    cd "$PROJECT_ROOT" || exit 1
+    if cat "$exec_input" | gemini; then
         rm -f "$exec_input"
         log_success "Prompt executado com sucesso: $prompt_file"
     else
         rm -f "$exec_input"
-        log_error "Codex CLI retornou erro para: $prompt_file"
+        log_error "Gemini CLI retornou erro para: $prompt_file"
         exit 1
     fi
 }
@@ -212,7 +206,6 @@ run_prompt() {
 run_chain() {
     local fase="$1"
 
-    # Mapeamento fase → lista de prompts (ordem de execução)
     declare -A chains
     chains["scaffolding"]="
         prompts/scaffolding/01-project-structure.md
@@ -286,7 +279,7 @@ run_chain() {
         run_prompt "$prompt"
         echo ""
         log_success "[$atual/$total] Concluído"
-        # Pausa de 2s entre prompts para não sobrecarregar a API
+        # Pausa de 2s para respeitar rate limits (o Gemini CLI tem um bucket próprio, mas é boa prática)
         [[ $atual -lt $total ]] && sleep 2
     done
 
@@ -299,7 +292,6 @@ list_prompts() {
     find "$PROJECT_ROOT/prompts" -name "*.md" | sort | while read -r f; do
         local rel
         rel=$(realpath --relative-to="$PROJECT_ROOT" "$f")
-        # Extrai o título H1 do arquivo
         local title
         title=$(grep -m1 "^# " "$f" | sed 's/^# //' || echo "(sem título)")
         printf "  %-60s %s\n" "$rel" "$title"
@@ -310,37 +302,26 @@ list_prompts() {
 show_help() {
     cat <<EOF
 
-${CYAN}codex-run.sh${NC} — Wrapper para Codex CLI do projeto CineSystem
+${CYAN}gemini-run.sh${NC} — Wrapper para Gemini CLI (Antigravity) do projeto CineSystem
 
 ${YELLOW}Uso:${NC}
-  ./scripts/codex-run.sh <prompt>                    Executa um prompt
-  ./scripts/codex-run.sh --dry-run <prompt>          Mostra o que seria executado
-  ./scripts/codex-run.sh --chain <fase>              Executa todos os prompts de uma fase
-  ./scripts/codex-run.sh --list                      Lista todos os prompts disponíveis
-  ./scripts/codex-run.sh --help                      Mostra esta ajuda
+  ./scripts/gemini-run.sh <prompt>                    Executa um prompt
+  ./scripts/gemini-run.sh --dry-run <prompt>          Mostra o que seria executado
+  ./scripts/gemini-run.sh --chain <fase>              Executa todos os prompts de uma fase
+  ./scripts/gemini-run.sh --list                      Lista todos os prompts disponíveis
+  ./scripts/gemini-run.sh --help                      Mostra esta ajuda
 
 ${YELLOW}Exemplos:${NC}
-  ./scripts/codex-run.sh prompts/features/filme/01-domain.md
-  ./scripts/codex-run.sh --dry-run prompts/features/ingresso/02-application.md
-  ./scripts/codex-run.sh --chain scaffolding
-  ./scripts/codex-run.sh --chain fase2
-
-${YELLOW}Chains disponíveis:${NC}
-  scaffolding   Estrutura inicial, shared domain, security, migrations
-  fase2         Módulo Filme completo (domínio → infra → interface → testes)
-  fase3         Módulo Sessão completo
-  fase4         Módulo Ingresso completo (com Outbox + Redis)
-  fase5         Auth completo (JWT, login, cadastro)
-  admin         Painel administrativo (use cases + controller Admin)
-  validacao     Auditoria de dependências + geração de testes
+  ./scripts/gemini-run.sh prompts/features/filme/01-domain.md
+  ./scripts/gemini-run.sh --dry-run prompts/features/ingresso/02-application.md
+  ./scripts/gemini-run.sh --chain scaffolding
+  ./scripts/gemini-run.sh --chain fase2
 
 EOF
 }
 
 # ─── Entry point ─────────────────────────────────────────────────────────────
 main() {
-    check_dependencies
-
     case "${1:-}" in
         --help|-h)
             show_help
@@ -349,6 +330,7 @@ main() {
             list_prompts
             ;;
         --dry-run)
+            check_dependencies
             if [[ -z "${2:-}" ]]; then
                 log_error "--dry-run requer o caminho do prompt como segundo argumento"
                 exit 1
@@ -356,6 +338,7 @@ main() {
             run_prompt "$2" true
             ;;
         --chain)
+            check_dependencies
             if [[ -z "${2:-}" ]]; then
                 log_error "--chain requer o nome da fase como segundo argumento"
                 exit 1
@@ -367,6 +350,7 @@ main() {
             exit 1
             ;;
         *)
+            check_dependencies
             run_prompt "$1"
             ;;
     esac

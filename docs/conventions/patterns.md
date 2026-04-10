@@ -68,7 +68,7 @@ private final FilmeRepositoryAdapter filmeAdapter;
 V1__create_core_tables.sql   # tabelas principais
 V2__create_outbox.sql        # tabela outbox_events
 V3__create_indexes.sql       # todos os índices
-V5__seed_dev_data.sql        # seed de desenvolvimento (V4 reservado — nunca pule versões)
+V4__seed_dev_data.sql        # seed de desenvolvimento (V4 reservado — nunca pule versões)
 ```
 
 ## 8. Strategy Pattern para pagamentos
