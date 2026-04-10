@@ -27,12 +27,12 @@ public class FilmeRepositoryAdapter implements FilmeRepository {
 
     @Override
     public Optional<Filme> findById(FilmeId id) {
-        return jpaRepository.findById(id.valor())
+        return jpaRepository.findById(id.id())
                 .map(mapper::toDomainEntity);
     }
 
     @Override
-    public void delete(FilmeId id) {
-        jpaRepository.deleteById(id.valor());
+    public void delete(FilmeId filmeId) {
+        jpaRepository.deleteById(filmeId.id());
     }
 }

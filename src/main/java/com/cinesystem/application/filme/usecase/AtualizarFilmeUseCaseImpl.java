@@ -24,7 +24,7 @@ public class AtualizarFilmeUseCaseImpl implements AtualizarFilmeUseCase {
     @Transactional
     public FilmeResult execute(AtualizarFilmeCommand command) {
         Filme existing = filmeRepository.findById(command.id())
-                .orElseThrow(() -> new ResourceNotFoundException("Filme não encontrado: " + command.id().valor()));
+                .orElseThrow(() -> new ResourceNotFoundException("Filme não encontrado: " + command.id().id()));
 
         Filme updated = new Filme(
                 existing.getId(),

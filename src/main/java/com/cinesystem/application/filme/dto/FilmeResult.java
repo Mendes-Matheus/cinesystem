@@ -15,7 +15,7 @@ public record FilmeResult(
 ) {
     public static FilmeResult from(Filme filme) {
         return new FilmeResult(
-                filme.getId().valor(),
+                filme.getId().id(),
                 filme.getTitulo(),
                 filme.getGenero().name(),
                 filme.getClassificacao().codigo(),

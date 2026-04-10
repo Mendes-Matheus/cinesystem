@@ -4,7 +4,7 @@ import com.cinesystem.domain.shared.DomainException;
 
 public record FilmeId(Long id) {
     public FilmeId {
-        if (valor == null) {
+        if (id == null) {
             throw new DomainException("FilmeId não pode ser nulo");
         }
     }

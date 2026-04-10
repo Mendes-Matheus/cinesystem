@@ -4,7 +4,7 @@ import com.cinesystem.domain.shared.DomainException;
 
 public record AssentoId(Long id) {
     public AssentoId {
-        if (valor == null)
+        if (id == null)
             throw new DomainException("AssentoId não pode ser nulo");
     }
 }

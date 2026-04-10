@@ -23,7 +23,7 @@ public class FilmeQueryAdapter implements FilmeQueryPort {
     }
 
     @Override
-    public Optional<FilmeResult> findResultById(FilmeId id) {
-        return jpaRepository.findProjectedById(id.valor());
+    public Optional<FilmeResult> findResultById(FilmeId filmeId) {
+        return jpaRepository.findProjectedById(filmeId.id());
     }
 }

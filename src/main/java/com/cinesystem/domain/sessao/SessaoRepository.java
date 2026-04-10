@@ -10,4 +10,5 @@ public interface SessaoRepository {
     Optional<Sessao> findById(SessaoId id);
     Optional<SessaoAssento> findSessaoAssento(SessaoId sessaoId, AssentoId assentoId);
     List<SessaoAssento> findAssentosDisponiveis(SessaoId sessaoId);
+    void saveAllAssentos(List<SessaoAssento> assentos);
 }

@@ -27,7 +27,7 @@ public class FilmeJpaMapper {
         if (filme == null) return null;
         FilmeJpaEntity entity = new FilmeJpaEntity();
         if (filme.getId() != null) {
-            entity.setId(filme.getId().valor());
+            entity.setId(filme.getId().id());
         }
         entity.setTitulo(filme.getTitulo());
         entity.setSinopse(filme.getSinopse());

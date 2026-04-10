@@ -16,8 +16,8 @@ public class BuscarFilmePorIdUseCaseImpl implements BuscarFilmePorIdUseCase {
     }
 
     @Override
-    public FilmeResult execute(FilmeId id) {
-        return filmeQueryPort.findResultById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Filme não encontrado: " + id.valor()));
+    public FilmeResult execute(FilmeId filmeId) {
+        return filmeQueryPort.findResultById(filmeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Filme não encontrado: " + filmeId.id()));
     }
 }
