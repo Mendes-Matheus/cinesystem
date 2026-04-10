@@ -193,7 +193,7 @@ public interface ReservaAssentoPort {
 ### Endpoints
 | Método | Path                        | Auth          | Body                    | Response |
 |--------|-----------------------------|---------------|-------------------------|----------|
-| POST   | `/api/v1/ingressos`         | Autenticado   | `ComprarIngressoRequestDTO` | `IngressoResponseDTO` (201) |
+| POST   | `/api/v1/ingressos`         | Autenticado   | `IngressoRequestDTO` | `IngressoResponseDTO` (201) |
 | DELETE | `/api/v1/ingressos/{id}`    | Autenticado   | —                       | 204      |
 | GET    | `/api/v1/ingressos/meus`    | Autenticado   | —                       | `List<IngressoResponseDTO>` |
 | GET    | `/api/v1/ingressos/{id}`    | Autenticado   | —                       | `IngressoResponseDTO` |

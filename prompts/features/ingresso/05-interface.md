@@ -8,9 +8,9 @@ context:
 
 Implemente os 4 arquivos da camada HTTP do módulo Ingresso.
 
-## ComprarIngressoRequestDTO.java
+## IngressoRequestDTO.java
 ```java
-public record ComprarIngressoRequestDTO(
+public record IngressoRequestDTO(
     @NotNull Long sessaoId,
     @NotNull Long assentoId,
     @NotNull MetodoPagamento metodoPagamento
@@ -30,7 +30,7 @@ public record ComprarIngressoRequestDTO(
 
 ## IngressoHttpMapper.java
 - `@Component`
-- `ComprarIngressoCommand toCommand(ComprarIngressoRequestDTO dto, Long usuarioId)`
+- `ComprarIngressoCommand toCommand(IngressoRequestDTO dto, Long usuarioId)`
   — `usuarioId` vem do `SecurityContextHolder`, não do body
 - `IngressoBasicoResponseDTO toBasicoResponse(IngressoBasicoResult result)`
 - `IngressoResponseDTO toResponse(IngressoResult result)`

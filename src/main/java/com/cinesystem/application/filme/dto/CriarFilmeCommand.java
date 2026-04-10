@@ -1,4 +1,15 @@
 package com.cinesystem.application.filme.dto;
 
-public record CriarFilmeCommand() {
-}
+import com.cinesystem.domain.filme.ClassificacaoEtaria;
+import com.cinesystem.domain.filme.Genero;
+
+import java.time.LocalDate;
+
+public record CriarFilmeCommand(
+        String titulo,
+        Genero genero,
+        ClassificacaoEtaria classificacao,
+        int duracaoMinutos,
+        String posterUrl,
+        LocalDate dataLancamento
+) {}

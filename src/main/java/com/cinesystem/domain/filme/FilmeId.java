@@ -1,4 +1,11 @@
 package com.cinesystem.domain.filme;
 
-public record FilmeId() {
+import com.cinesystem.domain.shared.DomainException;
+
+public record FilmeId(Long valor) {
+    public FilmeId {
+        if (valor == null) {
+            throw new DomainException("FilmeId não pode ser nulo");
+        }
+    }
 }

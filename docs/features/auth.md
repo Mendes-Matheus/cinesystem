@@ -62,7 +62,7 @@ public record TokenResult(
     String accessToken, String tokenType, Long expiresIn
 ) {
     // tokenType é sempre "Bearer"
-}}
+}
 ```
 
 ### Comportamento de CadastrarUsuarioUseCaseImpl
