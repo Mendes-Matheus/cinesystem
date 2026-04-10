@@ -33,10 +33,13 @@ public class SessaoAssento {
             this.status = StatusAssento.OCUPADO;
             this.usuarioId = confirmadorId;
             return new Ingresso(
+                    null,
                     CodigoIngresso.gerar(),
                     confirmadorId,
                     this.id,
-                    sessao.getPreco()
+                    sessao.getPreco(),
+                    null,
+                    null
             );
         } else {
             throw new DomainException("Assento não disponível para este usuário");
