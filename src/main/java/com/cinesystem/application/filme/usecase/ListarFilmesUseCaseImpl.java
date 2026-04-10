@@ -20,15 +20,14 @@ public class ListarFilmesUseCaseImpl implements ListarFilmesUseCase {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<FilmeResult> execute(String genero) {
         String baseKey = genero != null ? genero.toLowerCase() : "todos";
         String cacheKey = "filmes:listagem:" + baseKey;
 
-        return (List<FilmeResult>) cachePort.get(cacheKey).orElseGet(() -> {
-            List<FilmeResult> result = filmeQueryPort.findAllAtivos(genero);
-            cachePort.set(cacheKey, result, Duration.ofMinutes(15));
-            return result;
-        });
-    }
-}
+        return cachePort.<List<FilmeResult>>get(cacheKey)
+                .orElseGet(() -> {
+                    List<FilmeResult> result = filmeQueryPort.findAllAtivos(genero);
+                    cachePort.set(cacheKey, result, Duration.ofMinutes(15));
+                    return result;
+                });
+    }}

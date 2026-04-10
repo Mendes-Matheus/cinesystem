@@ -17,22 +17,18 @@ public class RedisCacheAdapter implements CachePort {
         this.redisTemplate = redisTemplate;
     }
 
-    @Override
     public void set(String key, Object value, Duration ttl) {
         redisTemplate.opsForValue().set(key, value, ttl);
     }
 
-    @Override
     public Optional<Object> get(String key) {
         return Optional.ofNullable(redisTemplate.opsForValue().get(key));
     }
 
-    @Override
     public void evict(String key) {
         redisTemplate.delete(key);
     }
 
-    @Override
     public void evictByPrefix(String keyPrefix) {
         Set<String> keys = redisTemplate.keys(keyPrefix + "*");
         if (keys != null && !keys.isEmpty()) {
