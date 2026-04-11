@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+import java.util.Optional;
+
 public interface SessaoJpaRepository extends JpaRepository<SessaoJpaEntity, Long> {
 
     @Query("""
@@ -33,4 +35,16 @@ public interface SessaoJpaRepository extends JpaRepository<SessaoJpaEntity, Long
         ORDER BY sa.assento.fileira ASC, sa.assento.numero ASC
         """)
     List<AssentoResult> findAssentosBySessaoId(@Param("sessaoId") Long sessaoId);
+
+    @Query("""
+        SELECT new com.cinesystem.application.sessao.dto.SessaoResult(
+            s.id, s.filme.id, s.filme.titulo, s.sala.id, s.sala.nome,
+            s.dataHora, s.idioma, cast(s.formato as string), s.preco, cast(s.status as string),
+            cast((SELECT COUNT(sa) FROM SessaoAssentoJpaEntity sa
+             WHERE sa.sessao.id = s.id AND sa.status = 'DISPONIVEL') as int)
+        )
+        FROM SessaoJpaEntity s
+        WHERE s.id = :sessaoId
+        """)
+    Optional<SessaoResult> findResultById(@Param("sessaoId") Long sessaoId);
 }

@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface IngressoQueryPort {
     List<IngressoResult> findByUsuario(UsuarioId usuarioId);
     Optional<IngressoResult> findResultById(IngressoId id);
+    List<IngressoResult> findBySessaoId(com.cinesystem.domain.sessao.SessaoId sessaoId);
 }

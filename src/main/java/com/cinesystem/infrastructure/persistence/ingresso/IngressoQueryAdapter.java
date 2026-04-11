@@ -27,4 +27,9 @@ public class IngressoQueryAdapter implements IngressoQueryPort {
     public Optional<IngressoResult> findResultById(IngressoId id) {
         return jpaRepository.findProjectedById(id.id());
     }
+
+    @Override
+    public List<IngressoResult> findBySessaoId(com.cinesystem.domain.sessao.SessaoId sessaoId) {
+        return jpaRepository.findProjectedBySessaoId(sessaoId.id());
+    }
 }

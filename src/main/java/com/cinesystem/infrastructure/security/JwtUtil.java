@@ -60,6 +60,11 @@ public class JwtUtil implements JwtPort {
     }
 
     @Override
+    public Long extrairUserId(String token) {
+        return getClaims(token).get("userId", Long.class);
+    }
+
+    @Override
     public boolean isValido(String token) {
         try {
             getClaims(token);

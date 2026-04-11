@@ -38,4 +38,17 @@ public interface IngressoJpaRepository extends JpaRepository<IngressoJpaEntity, 
         WHERE i.id = :id
         """)
     Optional<IngressoResult> findProjectedById(@Param("id") Long id);
+
+    @Query("""
+        SELECT new com.cinesystem.application.ingresso.dto.IngressoResult(
+            i.id, i.codigo, sa.sessao.id, sa.assento.id,
+            sa.assento.fileira, sa.assento.numero,
+            s.filme.titulo, s.dataHora, i.valorPago, cast(i.status as string)
+        )
+        FROM IngressoJpaEntity i
+        JOIN i.sessaoAssento sa
+        JOIN sa.sessao s
+        WHERE sa.sessao.id = :sessaoId
+        """)
+    List<IngressoResult> findProjectedBySessaoId(@Param("sessaoId") Long sessaoId);
 }

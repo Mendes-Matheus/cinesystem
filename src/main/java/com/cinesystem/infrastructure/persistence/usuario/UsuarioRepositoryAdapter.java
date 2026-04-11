@@ -25,6 +25,11 @@ public class UsuarioRepositoryAdapter implements UsuarioRepository {
     }
 
     @Override
+    public Optional<Usuario> findById(com.cinesystem.domain.usuario.UsuarioId id) {
+        return jpaRepository.findById(id.id()).map(mapper::toDomainEntity);
+    }
+
+    @Override
     public Optional<Usuario> findByEmail(Email email) {
         return jpaRepository.findByEmail(email.valor()).map(mapper::toDomainEntity);
     }

@@ -8,6 +8,7 @@ import com.cinesystem.domain.sessao.SessaoId;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class SessaoQueryAdapter implements SessaoQueryPort {
@@ -26,5 +27,10 @@ public class SessaoQueryAdapter implements SessaoQueryPort {
     @Override
     public List<AssentoResult> findAssentosBySessao(SessaoId sessaoId) {
         return sessaoJpaRepository.findAssentosBySessaoId(sessaoId.id());
+    }
+
+    @Override
+    public Optional<SessaoResult> findResultById(SessaoId id) {
+        return sessaoJpaRepository.findResultById(id.id());
     }
 }
