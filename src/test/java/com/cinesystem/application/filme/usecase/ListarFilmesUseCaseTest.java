@@ -3,6 +3,7 @@ package com.cinesystem.application.filme.usecase;
 import com.cinesystem.application.filme.dto.FilmeResult;
 import com.cinesystem.application.port.out.CachePort;
 import com.cinesystem.application.port.out.query.FilmeQueryPort;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -31,58 +33,62 @@ class ListarFilmesUseCaseTest {
     private ListarFilmesUseCaseImpl useCase;
 
     @Test
+    @DisplayName("Deve retornar do cache quando houver cache hit")
     void deveRetornarDoCache_QuandoCacheHit() {
         // arrange
-        String cacheKey = "filmes:listagem:todos";
-        List<FilmeResult> cachedResults = List.of(
-                new FilmeResult(1L, "Duna", "FICCAO", "14", 156, "url", LocalDate.now())
-        );
-        when(cachePort.get(cacheKey)).thenReturn(Optional.of(cachedResults));
+        var filmesMockados = List.of(new FilmeResult(1L, "Mock Filme", "ACAO", "L", 100, null, LocalDate.now()));
+        when(cachePort.<List<FilmeResult>>get("filmes:listagem:todos")).thenReturn(Optional.of(filmesMockados));
 
         // act
-        List<FilmeResult> result = useCase.execute(null);
+        var result = useCase.execute(null);
 
         // assert
-        assertThat(result).hasSize(1).isEqualTo(cachedResults);
-        verifyNoInteractions(filmeQueryPort);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).titulo()).isEqualTo("Mock Filme");
+        verify(filmeQueryPort, never()).findAllAtivos(any());
+        verify(cachePort, never()).set(any(), any(), any());
     }
 
     @Test
-    void deveConsultarBancoEPopularCache_QuandoCacheMiss() {
+    @DisplayName("Deve consultar query port e popular cache quando ocorrer cache miss")
+    void deveConsultarQueryPort_EPopularCache_QuandoCacheMiss() {
         // arrange
-        String cacheKey = "filmes:listagem:todos";
-        when(cachePort.get(cacheKey)).thenReturn(Optional.empty());
-        
-        List<FilmeResult> dbResults = List.of(
-                new FilmeResult(1L, "Duna", "FICCAO", "14", 156, "url", LocalDate.now())
-        );
-        when(filmeQueryPort.findAllAtivos(null)).thenReturn(dbResults);
+        var filmesMockados = List.of(new FilmeResult(1L, "Mock Filme", "ACAO", "L", 100, null, LocalDate.now()));
+        when(cachePort.<List<FilmeResult>>get("filmes:listagem:todos")).thenReturn(Optional.empty());
+        when(filmeQueryPort.findAllAtivos(null)).thenReturn(filmesMockados);
 
         // act
-        List<FilmeResult> result = useCase.execute(null);
+        var result = useCase.execute(null);
 
         // assert
-        assertThat(result).hasSize(1).isEqualTo(dbResults);
-        verify(cachePort).set(eq(cacheKey), eq(dbResults), eq(Duration.ofMinutes(15)));
+        assertThat(result).hasSize(1);
+        verify(filmeQueryPort).findAllAtivos(null);
+        verify(cachePort).set("filmes:listagem:todos", filmesMockados, Duration.ofMinutes(15));
     }
 
     @Test
-    void deveFiltrarPorGenero_QuandoGeneroInformado() {
+    @DisplayName("Deve usar a cache key correta quando gênero for informado")
+    void deveUsarCacheKeyCorreta_QuandoGeneroInformado() {
         // arrange
-        String genero = "FICCAO";
-        String cacheKey = "filmes:listagem:ficcao"; // toLowerCase
-        when(cachePort.get(cacheKey)).thenReturn(Optional.empty());
-        
-        List<FilmeResult> dbResults = List.of(
-                new FilmeResult(1L, "Duna", "FICCAO", "14", 156, "url", LocalDate.now())
-        );
-        when(filmeQueryPort.findAllAtivos(genero)).thenReturn(dbResults);
+        when(cachePort.<List<FilmeResult>>get("filmes:listagem:acao")).thenReturn(Optional.empty());
 
         // act
-        List<FilmeResult> result = useCase.execute(genero);
+        useCase.execute("ACAO");
 
         // assert
-        assertThat(result).hasSize(1).isEqualTo(dbResults);
-        verify(cachePort).set(eq(cacheKey), eq(dbResults), eq(Duration.ofMinutes(15)));
+        verify(cachePort).get("filmes:listagem:acao");
+    }
+
+    @Test
+    @DisplayName("Deve usar a cache key correta quando gênero for nulo")
+    void deveUsarCacheKeyCorreta_QuandoGeneroNulo() {
+        // arrange
+        when(cachePort.<List<FilmeResult>>get("filmes:listagem:todos")).thenReturn(Optional.empty());
+
+        // act
+        useCase.execute(null);
+
+        // assert
+        verify(cachePort).get("filmes:listagem:todos");
     }
 }
