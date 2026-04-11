@@ -70,7 +70,7 @@ context:
 - `findSessaoAssento(sessaoId, assentoId)`:
   ```java
   sessaoAssentoJpaRepository
-      .findBySessaoIdAndAssentoId(sessaoId.valor(), assentoId.valor())
+      .findBySessaoIdAndAssentoId(sessaoId.id(), assentoId.valor())
       .map(mapper::toDomainSessaoAssento)
   ```
 

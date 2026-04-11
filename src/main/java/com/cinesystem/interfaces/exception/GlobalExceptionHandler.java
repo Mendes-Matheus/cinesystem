@@ -10,44 +10,50 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@RestControllerAdvice
 @Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(DomainException.class)
-    public ResponseEntity<ErrorResponseDTO> handleDomain(DomainException ex) {
+    public ResponseEntity<ErrorResponseDTO> handleDomainException(DomainException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ErrorResponseDTO("DOMAIN_ERROR", ex.getMessage()));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleNotFound(ResourceNotFoundException ex) {
+    public ResponseEntity<ErrorResponseDTO> handleResourceNotFoundException(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponseDTO("NOT_FOUND", ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponseDTO> handleValidationException(MethodArgumentNotValidException ex) {
         List<String> detalhes = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.toList());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponseDTO("VALIDATION_ERROR", "Erro de validação", LocalDateTime.now(), detalhes));
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                "VALIDATION_ERROR", 
+                "Erro de validação nos campos", 
+                java.time.LocalDateTime.now(), 
+                detalhes
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponseDTO> handleForbidden(AccessDeniedException ex) {
+    public ResponseEntity<ErrorResponseDTO> handleAccessDeniedException(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ErrorResponseDTO("FORBIDDEN", "Acesso negado"));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> handleGeneric(Exception ex) {
-        log.error("Erro não tratado", ex);
+    public ResponseEntity<ErrorResponseDTO> handleGeneralException(Exception ex) {
+        log.error("Erro interno não tratado", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponseDTO("INTERNAL_ERROR", "Ocorreu um erro interno no servidor"));
     }

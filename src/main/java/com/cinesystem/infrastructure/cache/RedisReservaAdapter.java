@@ -20,14 +20,14 @@ public class RedisReservaAdapter implements ReservaAssentoPort {
 
     @Override
     public boolean reservar(SessaoId sessaoId, AssentoId assentoId, UsuarioId usuarioId) {
-        String key = "reserva:%d:%d".formatted(sessaoId.valor(), assentoId.valor());
-        Boolean success = redisTemplate.opsForValue().setIfAbsent(key, usuarioId.valor(), Duration.ofMinutes(10));
+        String key = "reserva:%d:%d".formatted(sessaoId.id(), assentoId.id());
+        Boolean success = redisTemplate.opsForValue().setIfAbsent(key, usuarioId.id(), Duration.ofMinutes(10));
         return Boolean.TRUE.equals(success);
     }
 
     @Override
     public void liberar(SessaoId sessaoId, AssentoId assentoId) {
-        String key = "reserva:%d:%d".formatted(sessaoId.valor(), assentoId.valor());
+        String key = "reserva:%d:%d".formatted(sessaoId.id(), assentoId.id());
         redisTemplate.delete(key);
     }
 }

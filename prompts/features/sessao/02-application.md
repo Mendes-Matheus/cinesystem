@@ -29,7 +29,7 @@ context:
 
 ### BuscarAssentosUseCaseImpl
 - Usa `SessaoQueryPort.findAssentosBySessao()`
-- Cache: chave `"assentos:sessao:{sessaoId.valor()}"`, TTL 30 segundos
+- Cache: chave `"assentos:sessao:{sessaoId.id()}"`, TTL 30 segundos
 - TTL curto porque status de assento muda com cada reserva Redis
 
 ### CriarSessaoUseCaseImpl
