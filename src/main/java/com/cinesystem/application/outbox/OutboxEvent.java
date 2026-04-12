@@ -1,13 +1,12 @@
 package com.cinesystem.application.outbox;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 
 public class OutboxEvent {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private Long id;
     private String eventType;
@@ -33,7 +32,7 @@ public class OutboxEvent {
         try {
             String payloadJson = OBJECT_MAPPER.writeValueAsString(payloadObject);
             return new OutboxEvent(null, type, aggregateId, payloadJson, "PENDENTE", 0, LocalDateTime.now(), null);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException("Erro ao serializar payload do OutboxEvent", e);
         }
     }

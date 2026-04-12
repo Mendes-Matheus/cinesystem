@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ListarFilmesUseCaseImpl implements ListarFilmesUseCase {
@@ -24,10 +25,31 @@ public class ListarFilmesUseCaseImpl implements ListarFilmesUseCase {
         String baseKey = genero != null ? genero.toLowerCase() : "todos";
         String cacheKey = "filmes:listagem:" + baseKey;
 
-        return cachePort.<List<FilmeResult>>get(cacheKey)
-                .orElseGet(() -> {
-                    List<FilmeResult> result = filmeQueryPort.findAllAtivos(genero);
-                    cachePort.set(cacheKey, result, Duration.ofMinutes(15));
-                    return result;
-                });
-    }}
+        Optional<List<FilmeResult>> cached = cachePort.get(cacheKey)
+                .flatMap(value -> toFilmeResults(value, cacheKey));
+
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+
+        List<FilmeResult> result = filmeQueryPort.findAllAtivos(genero);
+        cachePort.set(cacheKey, result, Duration.ofMinutes(15));
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Optional<List<FilmeResult>> toFilmeResults(Object value, String cacheKey) {
+        if (!(value instanceof List<?> list)) {
+            cachePort.evictByPrefix(cacheKey);
+            return Optional.empty();
+        }
+
+        boolean cacheValido = list.stream().allMatch(FilmeResult.class::isInstance);
+        if (!cacheValido) {
+            cachePort.evictByPrefix(cacheKey);
+            return Optional.empty();
+        }
+
+        return Optional.of((List<FilmeResult>) list);
+    }
+}

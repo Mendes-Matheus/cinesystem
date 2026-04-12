@@ -29,7 +29,7 @@ public class SessaoQueryAdapter implements SessaoQueryPort {
         return sessaoJpaRepository.findAssentosBySessaoId(sessaoId.id());
     }
 
-    @Override
+//    @Override
     public Optional<SessaoResult> findResultById(SessaoId id) {
         return sessaoJpaRepository.findResultById(id.id());
     }

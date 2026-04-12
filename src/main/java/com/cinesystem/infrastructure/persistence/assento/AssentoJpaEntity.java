@@ -22,7 +22,7 @@ public class AssentoJpaEntity {
     @JoinColumn(name = "sala_id", nullable = false)
     private SalaJpaEntity sala;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1)
     private String fileira;
 
     @Column(nullable = false)

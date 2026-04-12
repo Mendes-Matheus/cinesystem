@@ -3,7 +3,9 @@ package com.cinesystem.interfaces.http.filme;
 import com.cinesystem.application.filme.dto.AtualizarFilmeCommand;
 import com.cinesystem.application.filme.dto.CriarFilmeCommand;
 import com.cinesystem.application.filme.dto.FilmeResult;
+import com.cinesystem.domain.filme.ClassificacaoEtaria;
 import com.cinesystem.domain.filme.FilmeId;
+import com.cinesystem.domain.filme.Genero;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -16,8 +18,8 @@ public class FilmeHttpMapper {
         if (dto == null) return null;
         return new CriarFilmeCommand(
                 dto.titulo(),
-                dto.genero(),
-                dto.classificacao(),
+                Genero.valueOf(dto.genero()),
+                new ClassificacaoEtaria(dto.classificacao()),
                 dto.duracaoMinutos(),
                 dto.posterUrl(),
                 dto.dataLancamento()
@@ -29,8 +31,8 @@ public class FilmeHttpMapper {
         return new AtualizarFilmeCommand(
                 new FilmeId(id),
                 dto.titulo(),
-                dto.genero(),
-                dto.classificacao(),
+                Genero.valueOf(dto.genero()),
+                new ClassificacaoEtaria(dto.classificacao()),
                 dto.duracaoMinutos(),
                 dto.posterUrl()
         );

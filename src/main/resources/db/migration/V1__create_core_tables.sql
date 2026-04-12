@@ -32,7 +32,7 @@ CREATE TABLE sala (
 CREATE TABLE assento (
     id       BIGSERIAL PRIMARY KEY,
     sala_id  BIGINT       NOT NULL REFERENCES sala(id),
-    fileira  CHAR(1)      NOT NULL,
+    fileira  VARCHAR(1)   NOT NULL,
     numero   INTEGER      NOT NULL,
     tipo     VARCHAR(20)  NOT NULL,  -- STANDARD | VIP | ACESSIBILIDADE
     UNIQUE (sala_id, fileira, numero)

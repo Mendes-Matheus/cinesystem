@@ -1,7 +1,5 @@
 package com.cinesystem.application.auth.dto;
 
-import com.cinesystem.domain.usuario.Usuario;
-
 public record TokenResult(String accessToken, String tokenType, Long expiresIn) {
     public TokenResult {
         if (tokenType == null) {

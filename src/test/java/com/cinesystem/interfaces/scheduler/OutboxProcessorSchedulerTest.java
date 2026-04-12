@@ -4,7 +4,7 @@ import com.cinesystem.application.outbox.IngressoCompradoPayload;
 import com.cinesystem.application.outbox.OutboxEvent;
 import com.cinesystem.application.outbox.OutboxRepository;
 import com.cinesystem.application.port.out.EmailPort;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

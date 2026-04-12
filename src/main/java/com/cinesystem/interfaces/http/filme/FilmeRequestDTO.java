@@ -9,10 +9,10 @@ import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
 
 public record FilmeRequestDTO(
-    @NotBlank String titulo,
-    @NotNull Genero genero,
-    @NotNull ClassificacaoEtaria classificacao,
-    @Positive int duracaoMinutos,
-    String posterUrl,
-    @NotNull LocalDate dataLancamento
+        @NotBlank String titulo,
+        @NotBlank String genero,
+        @NotBlank String classificacao,
+        @Positive int duracaoMinutos,
+        String posterUrl,
+        @NotNull LocalDate dataLancamento
 ) {}

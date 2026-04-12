@@ -31,18 +31,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDTO> handleValidationException(MethodArgumentNotValidException ex) {
+
         List<String> detalhes = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.toList());
 
-        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
-                "VALIDATION_ERROR", 
-                "Erro de validação nos campos", 
-                java.time.LocalDateTime.now(), 
-                detalhes
+        return ResponseEntity.unprocessableEntity().body(
+                new ErrorResponseDTO(
+                        "DOMAIN_ERROR",
+                        "Dados inválidos",
+                        java.time.LocalDateTime.now(),
+                        detalhes
+                )
         );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

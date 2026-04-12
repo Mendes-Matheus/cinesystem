@@ -1,6 +1,7 @@
 package com.cinesystem.infrastructure.persistence.outbox;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,6 +25,7 @@ public class OutboxEventJpaEntity {
     @Column(name = "aggregate_id", nullable = false)
     private String aggregateId;
 
+    @JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
     private String payload;
 

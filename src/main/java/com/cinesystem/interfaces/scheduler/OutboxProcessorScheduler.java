@@ -4,7 +4,7 @@ import com.cinesystem.application.outbox.IngressoCompradoPayload;
 import com.cinesystem.application.outbox.OutboxEvent;
 import com.cinesystem.application.outbox.OutboxRepository;
 import com.cinesystem.application.port.out.EmailPort;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

@@ -39,15 +39,15 @@ ON CONFLICT (nome) DO NOTHING;
 -- ─── Assentos da Sala 1 (fileiras A-F, 20 lugares cada) ──────────────────────
 DO $$
 DECLARE
-    sala_id BIGINT;
-    fileira CHAR(1);
-    num     INTEGER;
+    v_sala_id BIGINT;
+    v_fileira CHAR(1);
+    v_num     INTEGER;
 BEGIN
-    SELECT id INTO sala_id FROM sala WHERE nome = 'Sala 1' LIMIT 1;
-    FOREACH fileira IN ARRAY ARRAY['A','B','C','D','E','F'] LOOP
-        FOR num IN 1..20 LOOP
+    SELECT id INTO v_sala_id FROM sala WHERE nome = 'Sala 1' LIMIT 1;
+    FOREACH v_fileira IN ARRAY ARRAY['A','B','C','D','E','F'] LOOP
+        FOR v_num IN 1..20 LOOP
             INSERT INTO assento (sala_id, fileira, numero, tipo)
-            VALUES (sala_id, fileira, num, 'STANDARD')
+            VALUES (v_sala_id, v_fileira, v_num, 'STANDARD')
             ON CONFLICT (sala_id, fileira, numero) DO NOTHING;
         END LOOP;
     END LOOP;

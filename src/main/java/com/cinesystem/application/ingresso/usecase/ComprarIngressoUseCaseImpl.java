@@ -16,6 +16,8 @@ import com.cinesystem.domain.shared.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class ComprarIngressoUseCaseImpl implements ComprarIngressoUseCase {
 
@@ -48,6 +50,7 @@ public class ComprarIngressoUseCaseImpl implements ComprarIngressoUseCase {
         }
 
         Ingresso ingresso = sessaoAssento.confirmarCompra(command.usuarioId(), sessao);
+        sessaoRepository.saveAllAssentos(List.of(sessaoAssento));
         Ingresso salvo = ingressoRepository.save(ingresso);
 
         IngressoCompradoPayload payload = new IngressoCompradoPayload(
