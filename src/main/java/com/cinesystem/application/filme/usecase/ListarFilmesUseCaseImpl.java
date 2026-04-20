@@ -3,6 +3,7 @@ package com.cinesystem.application.filme.usecase;
 import com.cinesystem.application.filme.dto.FilmeResult;
 import com.cinesystem.application.port.out.CachePort;
 import com.cinesystem.application.port.out.query.FilmeQueryPort;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -11,6 +12,8 @@ import java.util.Optional;
 
 @Service
 public class ListarFilmesUseCaseImpl implements ListarFilmesUseCase {
+
+    private static final TypeReference<List<FilmeResult>> FILME_LIST_TYPE = new TypeReference<>() {};
 
     private final FilmeQueryPort filmeQueryPort;
     private final CachePort cachePort;
@@ -25,9 +28,7 @@ public class ListarFilmesUseCaseImpl implements ListarFilmesUseCase {
         String baseKey = genero != null ? genero.toLowerCase() : "todos";
         String cacheKey = "filmes:listagem:" + baseKey;
 
-        Optional<List<FilmeResult>> cached = cachePort.get(cacheKey)
-                .flatMap(value -> toFilmeResults(value, cacheKey));
-
+        Optional<List<FilmeResult>> cached = cachePort.get(cacheKey, FILME_LIST_TYPE);
         if (cached.isPresent()) {
             return cached.get();
         }
@@ -35,21 +36,5 @@ public class ListarFilmesUseCaseImpl implements ListarFilmesUseCase {
         List<FilmeResult> result = filmeQueryPort.findAllAtivos(genero);
         cachePort.set(cacheKey, result, Duration.ofMinutes(15));
         return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Optional<List<FilmeResult>> toFilmeResults(Object value, String cacheKey) {
-        if (!(value instanceof List<?> list)) {
-            cachePort.evictByPrefix(cacheKey);
-            return Optional.empty();
-        }
-
-        boolean cacheValido = list.stream().allMatch(FilmeResult.class::isInstance);
-        if (!cacheValido) {
-            cachePort.evictByPrefix(cacheKey);
-            return Optional.empty();
-        }
-
-        return Optional.of((List<FilmeResult>) list);
     }
 }

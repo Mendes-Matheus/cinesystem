@@ -18,8 +18,8 @@ public class FilmeHttpMapper {
         if (dto == null) return null;
         return new CriarFilmeCommand(
                 dto.titulo(),
-                Genero.valueOf(dto.genero()),
-                new ClassificacaoEtaria(dto.classificacao()),
+                Genero.valueOf(dto.genero().toUpperCase()), // Tolerante a letras minúsculas
+                ClassificacaoEtaria.of(dto.classificacao()), // Usando o factory method do Value Object
                 dto.duracaoMinutos(),
                 dto.posterUrl(),
                 dto.dataLancamento()
@@ -31,8 +31,8 @@ public class FilmeHttpMapper {
         return new AtualizarFilmeCommand(
                 new FilmeId(id),
                 dto.titulo(),
-                Genero.valueOf(dto.genero()),
-                new ClassificacaoEtaria(dto.classificacao()),
+                Genero.valueOf(dto.genero().toUpperCase()), // Tolerante a letras minúsculas
+                ClassificacaoEtaria.of(dto.classificacao()), // Usando o factory method do Value Object
                 dto.duracaoMinutos(),
                 dto.posterUrl()
         );

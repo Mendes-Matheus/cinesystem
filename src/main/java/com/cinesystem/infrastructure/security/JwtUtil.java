@@ -8,6 +8,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -21,11 +22,11 @@ public class JwtUtil implements JwtPort {
 
     private final String secret;
     private final int expirationMinutes;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     public JwtUtil(@Value("${jwt.secret}") String secret,
                    @Value("${jwt.expiration-minutes:15}") int expirationMinutes,
-                   RedisTemplate<String, Object> redisTemplate) {
+                   StringRedisTemplate redisTemplate) {
         this.secret = secret;
         this.expirationMinutes = expirationMinutes;
         this.redisTemplate = redisTemplate;
@@ -79,10 +80,15 @@ public class JwtUtil implements JwtPort {
         Claims claims = getClaims(token);
         String jti = claims.getId();
         Date expiration = claims.getExpiration();
+
         long remainingMillis = expiration.getTime() - System.currentTimeMillis();
 
         if (remainingMillis > 0) {
-            redisTemplate.opsForValue().set("token:blacklist:" + jti, "1", Duration.ofMillis(remainingMillis));
+            redisTemplate.opsForValue().set(
+                    "token:blacklist:" + jti,
+                    "1",
+                    Duration.ofMillis(remainingMillis)
+            );
         }
     }
 

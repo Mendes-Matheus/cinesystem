@@ -11,4 +11,5 @@ public interface SessaoRepository {
     Optional<SessaoAssento> findSessaoAssento(SessaoId sessaoId, AssentoId assentoId);
     List<SessaoAssento> findAssentosDisponiveis(SessaoId sessaoId);
     void saveAllAssentos(List<SessaoAssento> assentos);
+    List<SessaoAssento> findReservasExpiradas(java.time.LocalDateTime dataLimite);
 }

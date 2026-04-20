@@ -6,13 +6,19 @@ import com.cinesystem.application.outbox.IngressoCompradoPayload;
 import com.cinesystem.application.outbox.OutboxEvent;
 import com.cinesystem.application.outbox.OutboxRepository;
 import com.cinesystem.application.port.out.ReservaAssentoPort;
+import com.cinesystem.domain.assento.Assento;
+import com.cinesystem.domain.assento.AssentoRepository;
+import com.cinesystem.domain.filme.Filme;
+import com.cinesystem.domain.filme.FilmeRepository;
 import com.cinesystem.domain.ingresso.Ingresso;
 import com.cinesystem.domain.ingresso.IngressoRepository;
+import com.cinesystem.domain.sessao.Sessao;
 import com.cinesystem.domain.sessao.SessaoAssento;
 import com.cinesystem.domain.sessao.SessaoRepository;
-import com.cinesystem.domain.sessao.Sessao;
 import com.cinesystem.domain.shared.DomainException;
 import com.cinesystem.domain.shared.ResourceNotFoundException;
+import com.cinesystem.domain.usuario.Usuario;
+import com.cinesystem.domain.usuario.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,15 +31,24 @@ public class ComprarIngressoUseCaseImpl implements ComprarIngressoUseCase {
     private final ReservaAssentoPort reservaPort;
     private final IngressoRepository ingressoRepository;
     private final OutboxRepository outboxRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final FilmeRepository filmeRepository;
+    private final AssentoRepository assentoRepository;
 
     public ComprarIngressoUseCaseImpl(SessaoRepository sessaoRepository,
                                       ReservaAssentoPort reservaPort,
                                       IngressoRepository ingressoRepository,
-                                      OutboxRepository outboxRepository) {
+                                      OutboxRepository outboxRepository,
+                                      UsuarioRepository usuarioRepository,
+                                      FilmeRepository filmeRepository,
+                                      AssentoRepository assentoRepository) {
         this.sessaoRepository = sessaoRepository;
         this.reservaPort = reservaPort;
         this.ingressoRepository = ingressoRepository;
         this.outboxRepository = outboxRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.filmeRepository = filmeRepository;
+        this.assentoRepository = assentoRepository;
     }
 
     @Override
@@ -49,6 +64,15 @@ public class ComprarIngressoUseCaseImpl implements ComprarIngressoUseCase {
             throw new DomainException("O assento já está temporariamente reservado!");
         }
 
+        Usuario usuario = usuarioRepository.findById(command.usuarioId())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+
+        Filme filme = filmeRepository.findById(sessao.getFilmeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Filme não encontrado"));
+
+        Assento assento = assentoRepository.findById(command.assentoId())
+                .orElseThrow(() -> new ResourceNotFoundException("Assento não encontrado"));
+
         Ingresso ingresso = sessaoAssento.confirmarCompra(command.usuarioId(), sessao);
         sessaoRepository.saveAllAssentos(List.of(sessaoAssento));
         Ingresso salvo = ingressoRepository.save(ingresso);
@@ -56,15 +80,15 @@ public class ComprarIngressoUseCaseImpl implements ComprarIngressoUseCase {
         IngressoCompradoPayload payload = new IngressoCompradoPayload(
                 salvo.getId() != null ? salvo.getId().id() : 0L,
                 salvo.getCodigo().valor(),
-                "usuario@" + command.usuarioId().valor() + ".com", 
-                "Filme Placeholder", 
+                usuario.getEmail().valor(),
+                filme.getTitulo(),
                 sessao.getDataHora(),
-                "A", 
-                1,   
+                assento.getFileira(),
+                assento.getNumero(),
                 salvo.getValorPago()
         );
 
-        outboxRepository.save(OutboxEvent.of("IngressoComprado", 
+        outboxRepository.save(OutboxEvent.of("IngressoComprado",
                 salvo.getId() != null ? String.valueOf(salvo.getId().id()) : null, payload));
 
         return IngressoBasicoResult.from(salvo);

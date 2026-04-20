@@ -51,26 +51,28 @@ public class CriarSessaoUseCaseImpl implements CriarSessaoUseCase {
         );
 
         Sessao salva = sessaoRepository.save(sessao);
-        
-        gerarAssentosDaSala(salva);
+
+        Integer mapeados = gerarAssentosDaSala(salva);
 
         cachePort.evictByPrefix("sessoes:filme:");
-        
-        return SessaoResult.from(salva, filme.getTitulo(), "Sala " + command.salaId().id(), 0);
+
+        return SessaoResult.from(salva, filme.getTitulo(), "Sala " + command.salaId().id(), mapeados);
     }
-    
-    private void gerarAssentosDaSala(Sessao sessao) {
+
+    private Integer gerarAssentosDaSala(Sessao sessao) {
         List<Assento> assentosDaSala = assentoRepository.findBySala(sessao.getSalaId());
         List<SessaoAssento> mapeados = assentosDaSala.stream()
-            .map(assento -> new SessaoAssento(
-                null,
-                sessao.getId(),
-                assento.getId(),
-                com.cinesystem.domain.assento.StatusAssento.DISPONIVEL,
-                null,
-                null
-            ))
-            .collect(Collectors.toList());
+                .map(assento -> new SessaoAssento(
+                        null,
+                        sessao.getId(),
+                        assento.getId(),
+                        com.cinesystem.domain.assento.StatusAssento.DISPONIVEL,
+                        null,
+                        null
+                ))
+        .collect(Collectors.toList());
         sessaoRepository.saveAllAssentos(mapeados);
+
+        return mapeados.size();
     }
 }

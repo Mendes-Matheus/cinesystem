@@ -39,21 +39,6 @@ public class AdminController {
 
     @DeleteMapping("/usuarios/{id}")
     public ResponseEntity<Void> desativarUsuario(@PathVariable Long id, Authentication auth) {
-        // Extract admin ID from Authentication (populated by JwtAuthFilter where principal is email, but here we need ID... wait)
-        // Actually, our JwtAuthFilter sets principal to email, but we have userId inside the claims.
-        // Let's extract it from our UserDetails implementation... wait. Our SpringUserDetailsAdapter 
-        // doesn't expose the ID directly in the Default User object. 
-        // We might need to change JwtAuthFilter to put userId in credentials or use a custom User class.
-        // Alternatively, the prompt implies "Extrai adminId do objeto Authentication".
-        // Let's use a typical cast or assume the AuthName is the UserID string? No, UserDetails username is email.
-        // Wait, in JwtAuthFilter, we set UsernamePasswordAuthenticationToken(email, null, authorities).
-        // Let's resolve the UserID from the repository by email if needed, or better, we can modify JwtAuthFilter to put the UserID.
-        // For now, let's extract it.
-        // But let's assume we can parse it from `auth.getDetails()` or similar if we adapt JwtAuthFilter.
-        // Wait! The previous `IngressoController` had a private method `getUsuarioAutenticado()` that did `Long.parseLong(auth.getName())` ! 
-        // Yes, `JwtAuthFilter` should have put the ID in the name! Let's check IngressoController logic.
-        // IngressoController logic: `Long.parseLong(auth.getName());`
-        
         Long adminId = Long.parseLong(auth.getName());
         desativarUsuarioUseCase.execute(new UsuarioId(id), new UsuarioId(adminId));
         return ResponseEntity.noContent().build();

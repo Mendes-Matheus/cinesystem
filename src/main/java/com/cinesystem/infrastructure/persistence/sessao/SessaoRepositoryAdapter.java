@@ -60,4 +60,11 @@ public class SessaoRepositoryAdapter implements SessaoRepository {
                 .collect(Collectors.toList());
         sessaoAssentoJpaRepository.saveAll(entities);
     }
+
+    @Override
+    public List<SessaoAssento> findReservasExpiradas(java.time.LocalDateTime dataLimite) {
+        return sessaoAssentoJpaRepository.findReservasExpiradas(dataLimite).stream()
+                .map(mapper::toDomainSessaoAssento)
+                .collect(Collectors.toList());
+    }
 }

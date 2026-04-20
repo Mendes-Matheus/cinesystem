@@ -42,14 +42,6 @@ class FilmeIntegrationTest extends CineSystemIntegrationTest {
     void deveCriarFilme_ComAutenticacaoAdmin() {
         String token = loginComoAdmin();
 
-        var command = new CriarFilmeCommand("Matrix", Genero.ACAO, new ClassificacaoEtaria("12"), 136, "http://poster", LocalDate.now());
-        
-        // CUIDADO: CriarFilmeCommand no pacote dto espera Strings se tiver sido alterado mas
-        // No meu commit anterior arrumamos pra ser record CriarFilmeCommand(String titulo, Genero genero, ClassificacaoEtaria classificacao...)
-        // Vamos checar o record CriarFilmeCommand.
-        // Wait, the API endpoint is defined in `FilmeController`. It probably expects JSON, and Spring will map "ACAO" to Genero enum.
-        // Let's create a Request DTO or just pass a String JSON / Map to avoid deserialization problems.
-        
         String payload = """
             {
                 "titulo": "Matrix",
@@ -63,12 +55,10 @@ class FilmeIntegrationTest extends CineSystemIntegrationTest {
 
         HttpEntity<String> request = new HttpEntity<>(payload, headersWithToken(token));
 
-
         ResponseEntity<String> postResponse = restTemplate.postForEntity("/api/v1/filmes", request, String.class);
-        
+
         assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
-        // Extract ID from Location or assuming there's only 1 item
         ResponseEntity<FilmeResponseDTO[]> getResponse =
                 restTemplate.getForEntity("/api/v1/filmes", FilmeResponseDTO[].class);
 

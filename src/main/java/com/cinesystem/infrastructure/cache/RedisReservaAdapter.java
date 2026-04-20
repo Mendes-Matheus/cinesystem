@@ -4,7 +4,7 @@ import com.cinesystem.application.port.out.ReservaAssentoPort;
 import com.cinesystem.domain.assento.AssentoId;
 import com.cinesystem.domain.sessao.SessaoId;
 import com.cinesystem.domain.usuario.UsuarioId;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -12,16 +12,17 @@ import java.time.Duration;
 @Component
 public class RedisReservaAdapter implements ReservaAssentoPort {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
-    public RedisReservaAdapter(RedisTemplate<String, Object> redisTemplate) {
+    public RedisReservaAdapter(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     @Override
     public boolean reservar(SessaoId sessaoId, AssentoId assentoId, UsuarioId usuarioId) {
         String key = reservationKey(sessaoId, assentoId);
-        Boolean success = redisTemplate.opsForValue().setIfAbsent(key, usuarioId.id(), Duration.ofMinutes(10));
+        Boolean success = redisTemplate.opsForValue()
+                .setIfAbsent(key, String.valueOf(usuarioId.id()), Duration.ofMinutes(10));
         return Boolean.TRUE.equals(success);
     }
 

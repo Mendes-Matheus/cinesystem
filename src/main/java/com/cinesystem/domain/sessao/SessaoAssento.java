@@ -42,7 +42,15 @@ public class SessaoAssento {
                     null
             );
         } else {
-            throw new DomainException("Assento não disponível para este usuário");
+            throw new DomainException("Assento já reservado");
+        }
+    }
+
+    public void liberarReservaExpirada() {
+        if (this.status == StatusAssento.RESERVADO) {
+            this.status = StatusAssento.DISPONIVEL;
+            this.reservadoAte = null;
+            this.usuarioId = null;
         }
     }
 
