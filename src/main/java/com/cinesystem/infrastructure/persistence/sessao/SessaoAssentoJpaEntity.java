@@ -39,4 +39,8 @@ public class SessaoAssentoJpaEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = true)
     private UsuarioJpaEntity usuario;
+
+    @Column(name = "reserva_identificador")
+    private String reservaIdentificador;
+
 }

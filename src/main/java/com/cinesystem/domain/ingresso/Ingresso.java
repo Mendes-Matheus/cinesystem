@@ -43,6 +43,16 @@ public class Ingresso {
         this.status = StatusIngresso.UTILIZADO;
     }
 
+    public void vincularUsuario(UsuarioId usuarioId) {
+        if (this.usuarioId != null) {
+            throw new DomainException("Este ingresso já está vinculado a um usuário.");
+        }
+        if (usuarioId == null) {
+            throw new DomainException("O ID do usuário para vinculação não pode ser nulo.");
+        }
+        this.usuarioId = usuarioId;
+    }
+
     public IngressoId getId() { return id; }
     public CodigoIngresso getCodigo() { return codigo; }
     public UsuarioId getUsuarioId() { return usuarioId; }

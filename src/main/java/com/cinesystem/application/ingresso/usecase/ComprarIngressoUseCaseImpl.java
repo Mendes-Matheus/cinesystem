@@ -60,7 +60,7 @@ public class ComprarIngressoUseCaseImpl implements ComprarIngressoUseCase {
         Sessao sessao = sessaoRepository.findById(command.sessaoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Sessão não foi encontrada"));
 
-        if (!reservaPort.reservar(command.sessaoId(), command.assentoId(), command.usuarioId())) {
+        if (!reservaPort.reservar(command.sessaoId(), command.assentoId(), command.usuarioId().id().toString())) {
             throw new DomainException("O assento já está temporariamente reservado!");
         }
 

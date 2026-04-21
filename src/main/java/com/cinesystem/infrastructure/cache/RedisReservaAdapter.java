@@ -3,7 +3,6 @@ package com.cinesystem.infrastructure.cache;
 import com.cinesystem.application.port.out.ReservaAssentoPort;
 import com.cinesystem.domain.assento.AssentoId;
 import com.cinesystem.domain.sessao.SessaoId;
-import com.cinesystem.domain.usuario.UsuarioId;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -19,10 +18,11 @@ public class RedisReservaAdapter implements ReservaAssentoPort {
     }
 
     @Override
-    public boolean reservar(SessaoId sessaoId, AssentoId assentoId, UsuarioId usuarioId) {
+    public boolean reservar(SessaoId sessaoId, AssentoId assentoId, String identificador) {
         String key = reservationKey(sessaoId, assentoId);
+        // Salva a String genérica (pode ser o guestId ou usuarioId)
         Boolean success = redisTemplate.opsForValue()
-                .setIfAbsent(key, String.valueOf(usuarioId.id()), Duration.ofMinutes(10));
+                .setIfAbsent(key, identificador, Duration.ofMinutes(10));
         return Boolean.TRUE.equals(success);
     }
 
