@@ -68,6 +68,7 @@ public class CriarSessaoUseCaseImpl implements CriarSessaoUseCase {
                         assento.getId(),
                         com.cinesystem.domain.assento.StatusAssento.DISPONIVEL,
                         null,
+                        null,
                         null
                 ))
         .collect(Collectors.toList());

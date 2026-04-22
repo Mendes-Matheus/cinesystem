@@ -20,13 +20,14 @@ public class SessaoAssento {
     private LocalDateTime reservadoAte;
     private UsuarioId usuarioId;
 
-    public SessaoAssento(Long id, SessaoId sessaoId, AssentoId assentoId, StatusAssento status, LocalDateTime reservadoAte, UsuarioId usuarioId) {
+    public SessaoAssento(Long id, SessaoId sessaoId, AssentoId assentoId, StatusAssento status, LocalDateTime reservadoAte, UsuarioId usuarioId, String reservaIdentificador) {
         this.id = id;
         this.sessaoId = sessaoId;
         this.assentoId = assentoId;
         this.status = status;
         this.reservadoAte = reservadoAte;
         this.usuarioId = usuarioId;
+        this.reservaIdentificador = reservaIdentificador;
     }
 
     public Ingresso confirmarCompra(UsuarioId confirmadorId, Sessao sessao) {
@@ -60,24 +61,24 @@ public class SessaoAssento {
         this.reservadoAte = LocalDateTime.now().plusMinutes(tempoMinutos);
     }
 
-    // O método confirmarCompra agora exige o identificador que realizou a reserva
-    public Ingresso iniciarFluxoCompra(String identificador, TipoIngresso tipo, BigDecimal precoSessao) {
-        if (this.status != StatusAssento.RESERVADO || !this.reservaIdentificador.equals(identificador)) {
-            throw new DomainException("Reserva inválida ou expirada");
-        }
-
-        BigDecimal valorFinal = tipo == TipoIngresso.MEIA ? precoSessao.divide(new BigDecimal("2")) : precoSessao;
-
-        return new Ingresso(
-                null,
-                CodigoIngresso.gerar(),
-                null, // Será preenchido após o login no checkout
-                this.id,
-                valorFinal,
-                StatusIngresso.AGUARDANDO_PAGAMENTO,
-                LocalDateTime.now()
-        );
-    }
+    // O metodo confirmarCompra agora exige o identificador que realizou a reserva
+//    public Ingresso iniciarFluxoCompra(String identificador, TipoIngresso tipo, BigDecimal precoSessao) {
+//        if (this.status != StatusAssento.RESERVADO || !this.reservaIdentificador.equals(identificador)) {
+//            throw new DomainException("Reserva inválida ou expirada");
+//        }
+//
+//        BigDecimal valorFinal = tipo == TipoIngresso.MEIA ? precoSessao.divide(new BigDecimal("2")) : precoSessao;
+//
+//        return new Ingresso(
+//                null,
+//                CodigoIngresso.gerar(),
+//                null, // Será preenchido após o login no checkout
+//                this.id,
+//                valorFinal,
+//                StatusIngresso.AGUARDANDO_PAGAMENTO,
+//                LocalDateTime.now()
+//        );
+//    }
 
     public void efetivarOcupacao() {
         if (this.status != StatusAssento.RESERVADO) {
@@ -85,6 +86,30 @@ public class SessaoAssento {
         }
         this.status = StatusAssento.OCUPADO;
         this.reservadoAte = null; // Limpa o tempo de expiração
+    }
+
+    public boolean pertenceA(String identificador) {
+        return this.status == StatusAssento.RESERVADO &&
+                this.reservaIdentificador != null &&
+                this.reservaIdentificador.equals(identificador);
+    }
+
+    public Ingresso iniciarFluxoCompra(String guestId, TipoIngresso tipo, BigDecimal precoBase) {
+        if (!pertenceA(guestId)) {
+            throw new DomainException("Assento não reservado para este identificador.");
+        }
+
+        BigDecimal valorFinal = tipo == TipoIngresso.MEIA ? precoBase.divide(new BigDecimal("2")) : precoBase;
+
+        return new Ingresso(
+                null,
+                null, // Código gerado internamente
+                null, // Usuário será vinculado no Use Case
+                this.id,
+                valorFinal,
+                StatusIngresso.AGUARDANDO_PAGAMENTO,
+                LocalDateTime.now()
+        );
     }
 
     public void liberarReservaExpirada() {
@@ -101,6 +126,6 @@ public class SessaoAssento {
     public StatusAssento getStatus() { return status; }
     public LocalDateTime getReservadoAte() { return reservadoAte; }
     public UsuarioId getUsuarioId() { return usuarioId; }
-
+    public String getReservaIdentificador() { return reservaIdentificador; }
 
 }

@@ -3,6 +3,7 @@ package com.cinesystem.interfaces.http.ingresso;
 import com.cinesystem.application.ingresso.dto.ComprarIngressoCommand;
 import com.cinesystem.application.ingresso.dto.IngressoBasicoResult;
 import com.cinesystem.application.ingresso.dto.IngressoResult;
+import com.cinesystem.application.ingresso.dto.IniciarCheckoutCommand;
 import com.cinesystem.domain.assento.AssentoId;
 import com.cinesystem.domain.sessao.SessaoId;
 import com.cinesystem.domain.usuario.UsuarioId;
@@ -48,6 +49,18 @@ public class IngressoHttpMapper {
                 result.dataHora(),
                 result.valorPago(),
                 result.status()
+        );
+    }
+
+    public IniciarCheckoutCommand toCheckoutCommand(IngressoRequestDTO dto, Long usuarioId, String guestId) {
+        if (dto == null) return null;
+
+        return new IniciarCheckoutCommand(
+                new SessaoId(dto.sessaoId()),
+                new AssentoId(dto.assentoId()),
+                new UsuarioId(usuarioId),
+                guestId,
+                dto.tipo() // Certifique-se que o IngressoRequestDTO possui o campo 'tipo' (TipoIngresso)
         );
     }
 

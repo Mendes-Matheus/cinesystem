@@ -64,7 +64,8 @@ public class SessaoJpaMapper {
                 new AssentoId(entity.getAssento().getId()),
                 entity.getStatus(),
                 entity.getReservadoAte(),
-                entity.getUsuario() != null ? new UsuarioId(entity.getUsuario().getId()) : null
+                entity.getUsuario() != null ? new UsuarioId(entity.getUsuario().getId()) : null,
+                entity.getReservaIdentificador()
         );
     }
 
@@ -93,6 +94,7 @@ public class SessaoJpaMapper {
 
         entity.setStatus(sessaoAssento.getStatus());
         entity.setReservadoAte(sessaoAssento.getReservadoAte());
+        entity.setReservaIdentificador(sessaoAssento.getReservaIdentificador());
         return entity;
     }
 }

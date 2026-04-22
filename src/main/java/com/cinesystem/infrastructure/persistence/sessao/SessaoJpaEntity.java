@@ -47,4 +47,5 @@ public class SessaoJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusSessao status;
+
 }

@@ -3,6 +3,7 @@ package com.cinesystem.interfaces.http.ingresso;
 import com.cinesystem.application.ingresso.dto.CancelarIngressoCommand;
 import com.cinesystem.application.ingresso.dto.IngressoBasicoResult;
 import com.cinesystem.application.ingresso.dto.IngressoResult;
+import com.cinesystem.application.ingresso.dto.IniciarCheckoutCommand;
 import com.cinesystem.application.ingresso.usecase.BuscarIngressoPorIdUseCase;
 import com.cinesystem.application.ingresso.usecase.CancelarIngressoUseCase;
 import com.cinesystem.application.ingresso.usecase.ComprarIngressoUseCase;
@@ -47,13 +48,20 @@ public class IngressoController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<IngressoBasicoResponseDTO> comprar(@Valid @RequestBody IngressoRequestDTO dto) {
+    public ResponseEntity<IngressoBasicoResponseDTO> comprar(
+            @Valid @RequestBody IngressoRequestDTO dto,
+            @RequestHeader(value = "X-Guest-ID", required = false) String guestId) {
+
         Long usuarioId = getUsuarioAutenticado();
-        var command = mapper.toCommand(dto, usuarioId);
+
+        // CORREÇÃO: O mapper agora deve montar o IniciarCheckoutCommand
+        // Certifique-se de que o metodo 'toCommand' no seu IngressoHttpMapper
+        // foi atualizado para receber o guestId e o TipoIngresso.
+        var command = mapper.toCheckoutCommand(dto, usuarioId, guestId);
+
         IngressoBasicoResult result = comprarIngressoUseCase.execute(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toBasicoResponse(result));
     }
-
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> cancelar(@PathVariable Long id) {
