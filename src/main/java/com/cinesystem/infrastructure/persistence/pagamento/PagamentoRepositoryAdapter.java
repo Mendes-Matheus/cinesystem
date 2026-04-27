@@ -28,4 +28,10 @@ public class PagamentoRepositoryAdapter implements PagamentoRepository {
         return jpaRepository.findByIngressoId(ingressoId)
                 .map(mapper::toDomainEntity);
     }
+
+    @Override
+    public Optional<Pagamento> findByTransacaoId(String transacaoId) {
+        return jpaRepository.findByTransacaoId(transacaoId)
+                .map(mapper::toDomainEntity);
+    }
 }

@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -19,7 +18,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ErrorResponseDTO> handleDomainException(DomainException ex) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErrorResponseDTO("DOMAIN_ERROR", ex.getMessage()));
     }
 
@@ -34,9 +33,9 @@ public class GlobalExceptionHandler {
 
         List<String> detalhes = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(Collectors.toList());
+                .toList();
 
-        return ResponseEntity.unprocessableEntity().body(
+        return ResponseEntity.unprocessableContent().body(
                 new ErrorResponseDTO(
                         "DOMAIN_ERROR",
                         "Dados inválidos",
@@ -47,7 +46,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponseDTO> handleAccessDeniedException(AccessDeniedException ex) {
+    public ResponseEntity<ErrorResponseDTO> handleAccessDeniedException() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ErrorResponseDTO("FORBIDDEN", "Acesso negado"));
     }

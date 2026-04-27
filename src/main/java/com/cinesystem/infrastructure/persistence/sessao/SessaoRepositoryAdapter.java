@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class SessaoRepositoryAdapter implements SessaoRepository {
@@ -50,14 +49,14 @@ public class SessaoRepositoryAdapter implements SessaoRepository {
         return sessaoAssentoJpaRepository.findBySessaoId(sessaoId.id()).stream()
                 .filter(entity -> entity.getStatus() == com.cinesystem.domain.assento.StatusAssento.DISPONIVEL)
                 .map(mapper::toDomainSessaoAssento)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public void saveAllAssentos(List<SessaoAssento> assentos) {
         List<SessaoAssentoJpaEntity> entities = assentos.stream()
                 .map(mapper::toJpaSessaoAssento)
-                .collect(Collectors.toList());
+                .toList();
         sessaoAssentoJpaRepository.saveAll(entities);
     }
 
@@ -65,6 +64,18 @@ public class SessaoRepositoryAdapter implements SessaoRepository {
     public List<SessaoAssento> findReservasExpiradas(java.time.LocalDateTime dataLimite) {
         return sessaoAssentoJpaRepository.findReservasExpiradas(dataLimite).stream()
                 .map(mapper::toDomainSessaoAssento)
-                .collect(Collectors.toList());
+                .toList();
+    }
+
+    @Override
+    public Optional<SessaoAssento> findSessaoAssentoById(Long sessaoAssentoId) {
+        return sessaoAssentoJpaRepository.findById(sessaoAssentoId)
+                .map(mapper::toDomainSessaoAssento);
+    }
+
+    @Override
+    public Optional<SessaoAssento> findByIdWithAssento(Long sessaoAssentoId) {
+        return sessaoAssentoJpaRepository.findByIdWithAssento(sessaoAssentoId)
+                .map(mapper::toDomainSessaoAssento);
     }
 }

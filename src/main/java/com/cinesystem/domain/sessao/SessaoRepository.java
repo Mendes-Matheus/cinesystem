@@ -10,6 +10,8 @@ public interface SessaoRepository {
     Optional<Sessao> findById(SessaoId id);
     Optional<SessaoAssento> findSessaoAssento(SessaoId sessaoId, AssentoId assentoId);
     List<SessaoAssento> findAssentosDisponiveis(SessaoId sessaoId);
+    Optional<SessaoAssento> findSessaoAssentoById(Long sessaoAssentoId);
     void saveAllAssentos(List<SessaoAssento> assentos);
     List<SessaoAssento> findReservasExpiradas(java.time.LocalDateTime dataLimite);
+    Optional<SessaoAssento> findByIdWithAssento(Long sessaoAssentoId);
 }

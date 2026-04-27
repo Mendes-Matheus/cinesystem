@@ -53,6 +53,13 @@ public class Ingresso {
         this.usuarioId = usuarioId;
     }
 
+    public void ativar() {
+        if (this.status != StatusIngresso.AGUARDANDO_PAGAMENTO) {
+            throw new DomainException("Apenas ingressos aguardando pagamento podem ser ativados.");
+        }
+        this.status = StatusIngresso.ATIVO;
+    }
+
     public IngressoId getId() { return id; }
     public CodigoIngresso getCodigo() { return codigo; }
     public UsuarioId getUsuarioId() { return usuarioId; }
