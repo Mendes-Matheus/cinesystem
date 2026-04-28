@@ -8,5 +8,7 @@ public record IngressoBasicoResponseDTO(
     String codigo,
     BigDecimal valorPago,
     String status,
-    LocalDateTime compradoEm
+    LocalDateTime compradoEm,
+    String qrCodePix,
+    String qrCodePixBase64
 ) {}

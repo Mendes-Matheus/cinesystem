@@ -43,7 +43,9 @@ public class CheckoutController {
                 result.codigo(),
                 result.valorPago(),
                 result.status(),
-                result.compradoEm()
+                result.compradoEm(),
+                result.qrCodePix(),
+                result.qrCodePixBase64()
         ));
     }
 }

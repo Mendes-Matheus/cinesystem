@@ -30,7 +30,7 @@ public class Ingresso {
     }
 
     public void cancelar() {
-        if (this.status != StatusIngresso.ATIVO) {
+        if (this.status != StatusIngresso.ATIVO && this.status != StatusIngresso.AGUARDANDO_PAGAMENTO) {
             throw new DomainException("Ingresso não pode ser cancelado: status " + this.status);
         }
         this.status = StatusIngresso.CANCELADO;

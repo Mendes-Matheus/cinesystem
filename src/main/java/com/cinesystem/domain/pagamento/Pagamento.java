@@ -33,6 +33,10 @@ public class Pagamento {
         this.processadoEm = LocalDateTime.now();
     }
 
+    public void vincularTransacao(String transacaoId) {
+        this.transacaoId = transacaoId;
+    }
+
     public void estornar() {
         if (this.status != StatusPagamento.APROVADO) {
             throw new DomainException("Apenas pagamentos APROVADOs podem ser estornados");

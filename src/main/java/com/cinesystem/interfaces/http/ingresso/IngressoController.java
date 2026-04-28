@@ -6,7 +6,7 @@ import com.cinesystem.application.ingresso.dto.IngressoResult;
 import com.cinesystem.application.ingresso.dto.IniciarCheckoutCommand;
 import com.cinesystem.application.ingresso.usecase.BuscarIngressoPorIdUseCase;
 import com.cinesystem.application.ingresso.usecase.CancelarIngressoUseCase;
-import com.cinesystem.application.ingresso.usecase.ComprarIngressoUseCase;
+import com.cinesystem.application.ingresso.usecase.IniciarCheckoutUseCase;
 import com.cinesystem.application.ingresso.usecase.ListarMeusIngressosUseCase;
 import com.cinesystem.domain.ingresso.IngressoId;
 import com.cinesystem.domain.usuario.UsuarioId;
@@ -23,18 +23,18 @@ import java.util.List;
 @RequestMapping("/api/v1/ingressos")
 public class IngressoController {
 
-    private final ComprarIngressoUseCase comprarIngressoUseCase;
+    private final IniciarCheckoutUseCase iniciarCheckoutUseCase;
     private final CancelarIngressoUseCase cancelarIngressoUseCase;
     private final ListarMeusIngressosUseCase listarMeusIngressosUseCase;
     private final BuscarIngressoPorIdUseCase buscarIngressoPorIdUseCase;
     private final IngressoHttpMapper mapper;
 
-    public IngressoController(ComprarIngressoUseCase comprarIngressoUseCase,
+    public IngressoController(IniciarCheckoutUseCase iniciarCheckoutUseCase,
                               CancelarIngressoUseCase cancelarIngressoUseCase,
                               ListarMeusIngressosUseCase listarMeusIngressosUseCase,
                               BuscarIngressoPorIdUseCase buscarIngressoPorIdUseCase,
                               IngressoHttpMapper mapper) {
-        this.comprarIngressoUseCase = comprarIngressoUseCase;
+        this.iniciarCheckoutUseCase = iniciarCheckoutUseCase;
         this.cancelarIngressoUseCase = cancelarIngressoUseCase;
         this.listarMeusIngressosUseCase = listarMeusIngressosUseCase;
         this.buscarIngressoPorIdUseCase = buscarIngressoPorIdUseCase;
@@ -59,7 +59,7 @@ public class IngressoController {
         // foi atualizado para receber o guestId e o TipoIngresso.
         var command = mapper.toCheckoutCommand(dto, usuarioId, guestId);
 
-        IngressoBasicoResult result = comprarIngressoUseCase.execute(command);
+        IngressoBasicoResult result = iniciarCheckoutUseCase.execute(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toBasicoResponse(result));
     }
     @DeleteMapping("/{id}")
