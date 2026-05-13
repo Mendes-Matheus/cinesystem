@@ -1,9 +1,0 @@
-package com.cinesystem.application.ingresso.usecase;
-
-import com.cinesystem.application.ingresso.dto.ComprarIngressoCommand;
-import com.cinesystem.application.ingresso.dto.IngressoBasicoResult;
-import com.cinesystem.application.ingresso.dto.IniciarCheckoutCommand;
-
-public interface ComprarIngressoUseCase {
-    IngressoBasicoResult execute(IniciarCheckoutCommand command);
-}

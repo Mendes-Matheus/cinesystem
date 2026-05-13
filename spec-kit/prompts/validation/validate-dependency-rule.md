@@ -42,9 +42,9 @@ da Regra de Dependência da Clean Architecture.
 Para cada violação encontrada:
 ```
 VIOLAÇÃO [CRÍTICA|PADRÃO]
-Arquivo: com.cinesystem.application.filme.usecase.ListarFilmesUseCaseImpl
+Arquivo: com.amenicsystem.application.filme.usecase.ListarFilmesUseCaseImpl
 Linha: 12
-Import proibido: com.cinesystem.infrastructure.persistence.filme.FilmeJpaRepository
+Import proibido: com.amenicsystem.infrastructure.persistence.filme.FilmeJpaRepository
 Correção: substituir por FilmeQueryPort (porta de leitura)
 ```
 

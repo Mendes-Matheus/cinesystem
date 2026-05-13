@@ -25,7 +25,7 @@ As interfaces `IngressoRepository`, `ReservaAssentoPort` e `OutboxRepository` j�
 - Projeção de leitura (CQRS):
   ```java
   @Query("""
-      SELECT new com.cinesystem.application.ingresso.dto.IngressoResult(
+      SELECT new com.amenicsystem.application.ingresso.dto.IngressoResult(
           i.id, i.codigo, sa.sessao.id, sa.assento.id,
           sa.assento.fileira, sa.assento.numero,
           s.filme.titulo, s.dataHora, i.valorPago, i.status

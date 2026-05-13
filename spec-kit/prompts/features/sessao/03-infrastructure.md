@@ -41,7 +41,7 @@ context:
 - Projeção para CQRS:
   ```java
   @Query("""
-      SELECT new com.cinesystem.application.sessao.dto.SessaoResult(
+      SELECT new com.amenicsystem.application.sessao.dto.SessaoResult(
           s.id, s.filme.id, s.filme.titulo, s.sala.id, s.sala.nome,
           s.dataHora, s.idioma, s.formato, s.preco, s.status,
           (SELECT COUNT(sa) FROM SessaoAssentoJpaEntity sa
@@ -54,7 +54,7 @@ context:
   List<SessaoResult> findAtivasByFilmeId(@Param("filmeId") Long filmeId);
 
   @Query("""
-      SELECT new com.cinesystem.application.sessao.dto.AssentoResult(
+      SELECT new com.amenicsystem.application.sessao.dto.AssentoResult(
           sa.assento.id, sa.assento.fileira, sa.assento.numero,
           sa.assento.tipo, sa.status
       )

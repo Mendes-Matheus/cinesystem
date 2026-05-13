@@ -71,7 +71,7 @@ public record RelatorioSessaoResult(
 - Adicione ao `UsuarioJpaRepository` a query de projeção:
   ```java
   @Query("""
-      SELECT new com.cinesystem.application.usuario.dto.UsuarioResult(
+      SELECT new com.amenicsystem.application.usuario.dto.UsuarioResult(
           u.id, u.nome, u.email, u.role, u.ativo, u.criadoEm
       )
       FROM UsuarioJpaEntity u

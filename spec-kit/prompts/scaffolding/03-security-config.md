@@ -17,8 +17,8 @@ Estes arquivos são o esqueleto da infraestrutura — sem lógica de negócio.
 ### JpaConfig.java
 ```java
 @Configuration
-@EnableJpaRepositories(basePackages = "com.cinesystem.infrastructure.persistence")
-@EntityScan(basePackages = "com.cinesystem.infrastructure.persistence")
+@EnableJpaRepositories(basePackages = "com.amenicsystem.infrastructure.persistence")
+@EntityScan(basePackages = "com.amenicsystem.infrastructure.persistence")
 public class JpaConfig {}
 ```
 

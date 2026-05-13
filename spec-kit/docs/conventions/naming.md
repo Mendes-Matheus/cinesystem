@@ -4,10 +4,10 @@
 
 | Camada | Padrão | Exemplo |
 |--------|--------|---------|
-| Domínio | `com.cinesystem.domain.{modulo}` | `com.cinesystem.domain.filme` |
-| Aplicação | `com.cinesystem.application.{modulo}` | `com.cinesystem.application.ingresso` |
-| Infraestrutura | `com.cinesystem.infrastructure.{tipo}` | `com.cinesystem.infrastructure.persistence.filme` |
-| Interfaces | `com.cinesystem.interfaces.http.{modulo}` | `com.cinesystem.interfaces.http.sessao` |
+| Domínio | `com.amenicsystem.domain.{modulo}` | `com.amenicsystem.domain.filme` |
+| Aplicação | `com.amenicsystem.application.{modulo}` | `com.amenicsystem.application.ingresso` |
+| Infraestrutura | `com.amenicsystem.infrastructure.{tipo}` | `com.amenicsystem.infrastructure.persistence.filme` |
+| Interfaces | `com.amenicsystem.interfaces.http.{modulo}` | `com.amenicsystem.interfaces.http.sessao` |
 
 ---
 

@@ -24,7 +24,7 @@ As interfaces `FilmeRepository` e `FilmeQueryPort` já existem.
 - Método de leitura com projeção JPQL:
   ```java
   @Query("""
-      SELECT new com.cinesystem.application.filme.dto.FilmeResult(
+      SELECT new com.amenicsystem.application.filme.dto.FilmeResult(
           f.id, f.titulo, f.genero, f.classificacao,
           f.duracaoMinutos, f.posterUrl, f.dataLancamento
       )
@@ -35,7 +35,7 @@ As interfaces `FilmeRepository` e `FilmeQueryPort` já existem.
       """)
   List<FilmeResult> findProjectedAtivos(@Param("genero") String genero);
 
-  @Query("SELECT new com.cinesystem.application.filme.dto.FilmeResult(...) FROM FilmeJpaEntity f WHERE f.id = :id")
+  @Query("SELECT new com.amenicsystem.application.filme.dto.FilmeResult(...) FROM FilmeJpaEntity f WHERE f.id = :id")
   Optional<FilmeResult> findProjectedById(@Param("id") Long id);
   ```
 - Método de escrita (carrega entidade completa): `List<FilmeJpaEntity> findByAtivoTrue()`

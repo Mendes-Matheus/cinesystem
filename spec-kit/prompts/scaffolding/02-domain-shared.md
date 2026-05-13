@@ -12,7 +12,7 @@ Nenhum deles pode importar qualquer classe de framework externo.
 ## DomainException.java
 
 ```
-pacote: com.cinesystem.domain.shared
+pacote: com.amenicsystem.domain.shared
 extends: RuntimeException
 construtores: (String message) e (String message, Throwable cause)
 ```
@@ -20,7 +20,7 @@ construtores: (String message) e (String message, Throwable cause)
 ## AggregateRoot.java
 
 ```
-pacote: com.cinesystem.domain.shared
+pacote: com.amenicsystem.domain.shared
 classe abstrata
 campo: List<DomainEvent> domainEvents = new ArrayList<>()
 método: protected void registerEvent(DomainEvent event)
@@ -31,7 +31,7 @@ método: public List<DomainEvent> pullDomainEvents()
 ## DomainEvent.java
 
 ```
-pacote: com.cinesystem.domain.shared
+pacote: com.amenicsystem.domain.shared
 interface
 método: LocalDateTime occurredOn()
 método: default String eventType() { return this.getClass().getSimpleName(); }

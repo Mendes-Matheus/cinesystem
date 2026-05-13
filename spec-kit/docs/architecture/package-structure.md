@@ -3,7 +3,7 @@
 Base: `src/main/java/com/cinesystem/`
 
 ```
-com.cinesystem/
+com.amenicsystem/
 ├── CineSystemApplication.java
 │
 ├── domain/

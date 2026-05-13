@@ -8,7 +8,7 @@ context:
 
 # Tarefa: Implementar domain/filme
 
-Implemente todos os arquivos do pacote `com.cinesystem.domain.filme`
+Implemente todos os arquivos do pacote `com.amenicsystem.domain.filme`
 conforme especificado em `docs/features/filme.md`.
 
 ## Arquivos a criar
