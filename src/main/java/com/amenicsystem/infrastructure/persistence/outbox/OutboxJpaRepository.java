@@ -11,6 +11,7 @@ public interface OutboxJpaRepository extends JpaRepository<OutboxEventJpaEntity,
     @Query("""
         SELECT o FROM OutboxEventJpaEntity o
         WHERE o.status = 'PENDENTE'
+           OR (o.status = 'FALHA' AND o.tentativas < 5)
         ORDER BY o.criadoEm ASC
         LIMIT :limit
         """)

@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: amenicsystem
+
+  datasource:
+    url: ${DB_URL_PROD}
+    username: ${DB_USER_PROD}
+    password: ${DB_PASS_PROD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate.jdbc.time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST_PROD}
+      port: ${REDIS_PORT_PROD}
+
+jwt:
+  secret: ${JWT_SECRET_PROD}
+  expiration-minutes: 15
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: false
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: false
+server:
+  port: 8081
+
+mercado-pago:
+  access-token: ${MERCADOPAGO_ACCESS_TOKEN_PROD}
+  public-key: ${MERCADOPAGO_PUBLIC_KEY_PROD}
+  back-url:
+    success: ${MERCADOPAGO_BACK_URL_SUCCESS_PROD}
+    pending: ${MERCADOPAGO_BACK_URL_PENDING_PROD}
+    fail: ${MERCADOPAGO_BACK_URL_FAIL_PROD}

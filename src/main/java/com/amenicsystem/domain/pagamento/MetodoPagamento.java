@@ -1,5 +1,5 @@
 package com.amenicsystem.domain.pagamento;
 
 public enum MetodoPagamento {
-    CARTAO_CREDITO, CARTAO_DEBITO, PIX, BOLETO
+    PIX, BOLETO, CARTAO_CREDITO, CHECKOUT_PRO
 }

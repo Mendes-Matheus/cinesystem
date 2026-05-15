@@ -4,6 +4,7 @@ import com.amenicsystem.application.filme.dto.FilmeResult;
 import com.amenicsystem.application.filme.usecase.*;
 import com.amenicsystem.domain.filme.FilmeId;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/filmes")
+@RequiredArgsConstructor
 public class FilmeController {
 
     private final ListarFilmesUseCase listarFilmesUseCase;
@@ -22,19 +24,6 @@ public class FilmeController {
     private final DeletarFilmeUseCase deletarFilmeUseCase;
     private final FilmeHttpMapper mapper;
 
-    public FilmeController(ListarFilmesUseCase listarFilmesUseCase,
-                           BuscarFilmePorIdUseCase buscarFilmePorIdUseCase,
-                           CriarFilmeUseCase criarFilmeUseCase,
-                           AtualizarFilmeUseCase atualizarFilmeUseCase,
-                           DeletarFilmeUseCase deletarFilmeUseCase,
-                           FilmeHttpMapper mapper) {
-        this.listarFilmesUseCase = listarFilmesUseCase;
-        this.buscarFilmePorIdUseCase = buscarFilmePorIdUseCase;
-        this.criarFilmeUseCase = criarFilmeUseCase;
-        this.atualizarFilmeUseCase = atualizarFilmeUseCase;
-        this.deletarFilmeUseCase = deletarFilmeUseCase;
-        this.mapper = mapper;
-    }
 
     @GetMapping
     public ResponseEntity<List<FilmeResponseDTO>> listarFilmes(@RequestParam(required = false) String genero) {

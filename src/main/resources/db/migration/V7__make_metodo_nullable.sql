@@ -1,0 +1,1 @@
+ALTER TABLE pagamento ALTER COLUMN metodo DROP NOT NULL;

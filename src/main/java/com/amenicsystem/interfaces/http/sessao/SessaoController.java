@@ -10,6 +10,7 @@ import com.amenicsystem.application.sessao.usecase.ListarSessoesPorFilmeUseCase;
 import com.amenicsystem.domain.filme.FilmeId;
 import com.amenicsystem.domain.sessao.SessaoId;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class SessaoController {
 
     private final ListarSessoesPorFilmeUseCase listarSessoesPorFilmeUseCase;
@@ -25,18 +27,6 @@ public class SessaoController {
     private final CriarSessaoUseCase criarSessaoUseCase;
     private final CancelarSessaoUseCase cancelarSessaoUseCase;
     private final SessaoHttpMapper mapper;
-
-    public SessaoController(ListarSessoesPorFilmeUseCase listarSessoesPorFilmeUseCase,
-                            BuscarAssentosUseCase buscarAssentosUseCase,
-                            CriarSessaoUseCase criarSessaoUseCase,
-                            CancelarSessaoUseCase cancelarSessaoUseCase,
-                            SessaoHttpMapper mapper) {
-        this.listarSessoesPorFilmeUseCase = listarSessoesPorFilmeUseCase;
-        this.buscarAssentosUseCase = buscarAssentosUseCase;
-        this.criarSessaoUseCase = criarSessaoUseCase;
-        this.cancelarSessaoUseCase = cancelarSessaoUseCase;
-        this.mapper = mapper;
-    }
 
     @GetMapping("/api/v1/filmes/{filmeId}/sessoes")
     public ResponseEntity<List<SessaoResponseDTO>> listarPorFilme(@PathVariable Long filmeId) {

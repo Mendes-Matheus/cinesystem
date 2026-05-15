@@ -39,9 +39,9 @@ public class AtualizarFilmeUseCaseImpl implements AtualizarFilmeUseCase {
         );
 
         Filme salvo = filmeRepository.save(updated);
-        
+
         cachePort.evictByPrefix("filmes:listagem:");
-        
+
         return FilmeResult.from(salvo);
     }
 }

@@ -30,8 +30,8 @@ public class Ingresso {
     }
 
     public void cancelar() {
-        if (this.status != StatusIngresso.ATIVO) {
-            throw new DomainException("Ingresso não pode ser cancelado: status " + this.status);
+        if (this.status != StatusIngresso.ATIVO && this.status != StatusIngresso.PENDENTE_PAGAMENTO) {
+            throw new DomainException("Ingresso não pode ser cancelado no status: " + this.status);
         }
         this.status = StatusIngresso.CANCELADO;
     }
@@ -51,6 +51,13 @@ public class Ingresso {
             throw new DomainException("O ID do usuário para vinculação não pode ser nulo.");
         }
         this.usuarioId = usuarioId;
+    }
+
+    public void ativar() {
+        if (this.status != StatusIngresso.PENDENTE_PAGAMENTO) {
+            throw new DomainException("Ingresso não pode ser ativado no status: " + this.status);
+        }
+        this.status = StatusIngresso.ATIVO;
     }
 
     public IngressoId getId() { return id; }

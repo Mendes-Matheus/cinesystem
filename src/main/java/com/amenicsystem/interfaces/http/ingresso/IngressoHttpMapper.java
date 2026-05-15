@@ -21,7 +21,9 @@ public class IngressoHttpMapper {
                 new SessaoId(dto.sessaoId()),
                 new AssentoId(dto.assentoId()),
                 new UsuarioId(usuarioId),
-                dto.metodoPagamento()
+                dto.metodoPagamento(),
+                dto.cpfCliente(),
+                dto.nomeCliente()
         );
     }
 
@@ -32,7 +34,9 @@ public class IngressoHttpMapper {
                 result.codigo(),
                 result.valorPago(),
                 result.status(),
-                result.compradoEm()
+                result.compradoEm(),
+                result.qrCodePix(),
+                result.qrCodePixBase64()
         );
     }
 
@@ -60,7 +64,23 @@ public class IngressoHttpMapper {
                 new AssentoId(dto.assentoId()),
                 new UsuarioId(usuarioId),
                 guestId,
-                dto.tipo() // Certifique-se que o IngressoRequestDTO possui o campo 'tipo' (TipoIngresso)
+                dto.tipo(),
+                dto.cpfCliente(),
+                dto.nomeCliente()
+        );
+    }
+
+    public IniciarCheckoutCommand toCheckoutCommand(CheckoutRequestDTO dto, Long usuarioId, String guestId) {
+        if (dto == null) return null;
+
+        return new IniciarCheckoutCommand(
+                new SessaoId(dto.sessaoId()),
+                new AssentoId(dto.assentoId()),
+                new UsuarioId(usuarioId),
+                guestId,
+                dto.tipo(),
+                dto.cpfCliente(),
+                dto.nomeCliente()
         );
     }
 

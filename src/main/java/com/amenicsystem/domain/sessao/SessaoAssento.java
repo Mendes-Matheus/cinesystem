@@ -30,10 +30,11 @@ public class SessaoAssento {
         this.reservaIdentificador = reservaIdentificador;
     }
 
-    public Ingresso confirmarCompra(UsuarioId confirmadorId, Sessao sessao) {
-        if (this.status == StatusAssento.DISPONIVEL || 
-           (this.status == StatusAssento.RESERVADO && this.usuarioId != null && this.usuarioId.equals(confirmadorId))) {
-            
+    public Ingresso confirmarCompra(UsuarioId confirmadorId, String guestId, Sessao sessao) {
+        if (this.status == StatusAssento.DISPONIVEL ||
+                (this.status == StatusAssento.RESERVADO && this.usuarioId != null && this.usuarioId.equals(confirmadorId)) ||
+                (this.status == StatusAssento.RESERVADO && guestId != null && pertenceA(guestId))) {
+
             this.status = StatusAssento.OCUPADO;
             this.usuarioId = confirmadorId;
             return new Ingresso(
@@ -42,7 +43,7 @@ public class SessaoAssento {
                     confirmadorId,
                     this.id,
                     sessao.getPreco(),
-                    null,
+                    StatusIngresso.PENDENTE_PAGAMENTO,
                     null
             );
         } else {
@@ -107,7 +108,7 @@ public class SessaoAssento {
                 null, // Usuário será vinculado no Use Case
                 this.id,
                 valorFinal,
-                StatusIngresso.AGUARDANDO_PAGAMENTO,
+                StatusIngresso.PENDENTE_PAGAMENTO,
                 LocalDateTime.now()
         );
     }

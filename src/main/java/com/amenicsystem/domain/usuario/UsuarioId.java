@@ -9,7 +9,7 @@ public record UsuarioId(Long id) {
         }
     }
 
-    // fallback mapping used previously for compatibility
+    // Mapeamento alternativo usado anteriormente para compatibilidade
     public Long valor() {
         return id;
     }

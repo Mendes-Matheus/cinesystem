@@ -2,6 +2,7 @@ package com.amenicsystem.interfaces.http.ingresso;
 
 import com.amenicsystem.domain.ingresso.TipoIngresso;
 import com.amenicsystem.domain.pagamento.MetodoPagamento;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record IngressoRequestDTO(
@@ -15,5 +16,11 @@ public record IngressoRequestDTO(
         TipoIngresso tipo,
 
         @NotNull(message = "O metódo de pagamento é obrigatório")
-        MetodoPagamento metodoPagamento
+        MetodoPagamento metodoPagamento,
+
+        @NotBlank(message = "O CPF é obrigatório")
+        String cpfCliente,
+
+        @NotBlank(message = "O nome é obrigatório")
+        String nomeCliente
 ) {}

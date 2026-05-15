@@ -3,9 +3,7 @@ package com.amenicsystem.infrastructure.persistence.pagamento;
 import com.amenicsystem.domain.pagamento.MetodoPagamento;
 import com.amenicsystem.domain.pagamento.StatusPagamento;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +13,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PagamentoJpaEntity {
 
     @Id
@@ -24,19 +24,25 @@ public class PagamentoJpaEntity {
     @Column(name = "ingresso_id", nullable = false)
     private Long ingressoId;
 
-    @Column(name = "transacao_id")
-    private String transacaoId;
+    @Column(name = "transacao_externa_id")
+    private String transacaoExternaId;
 
-    @Column(nullable = false)
+    @Column(name = "valor", nullable = false)
     private BigDecimal valor;
 
+    @Column(name = "metodo", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private MetodoPagamento metodo;
 
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private StatusPagamento status;
+
+    @Column(name = "dados_retorno", columnDefinition = "TEXT")
+    private String dadosRetorno;
+
+    @Column(name = "criado_em", nullable = false)
+    private LocalDateTime criadoEm;
 
     @Column(name = "processado_em")
     private LocalDateTime processadoEm;

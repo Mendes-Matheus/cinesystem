@@ -1,6 +1,7 @@
 package com.amenicsystem.interfaces.http.ingresso;
 
 import com.amenicsystem.domain.ingresso.TipoIngresso;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -16,5 +17,11 @@ public record CheckoutRequestDTO(
         Long assentoId,
 
         @NotNull(message = "O tipo de ingresso (INTEIRA/MEIA) é obrigatório")
-        TipoIngresso tipo
+        TipoIngresso tipo,
+
+        @NotBlank(message = "O CPF é obrigatório")
+        String cpfCliente,
+
+        @NotBlank(message = "O nome é obrigatório")
+        String nomeCliente
 ) {}

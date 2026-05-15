@@ -35,7 +35,7 @@ public class CancelarIngressoUseCaseImpl implements CancelarIngressoUseCase {
         ingressoRepository.save(ingresso);
 
         // 2. Busca o pagamento vinculado e realiza o estorno
-        pagamentoRepository.findByIngressoId(ingresso.getId().id())
+        pagamentoRepository.findByIngressoId(ingresso.getId())
                 .ifPresent(pagamento -> {
                     pagamento.estornar();
                     pagamentoRepository.save(pagamento);

@@ -13,4 +13,9 @@ public interface SessaoAssentoJpaRepository extends JpaRepository<SessaoAssentoJ
 
     @Query("SELECT sa FROM SessaoAssentoJpaEntity sa WHERE sa.status = 'RESERVADO' AND sa.reservadoAte < :dataLimite")
     List<SessaoAssentoJpaEntity> findReservasExpiradas(@Param("dataLimite") java.time.LocalDateTime dataLimite);
+
+    @Query("SELECT sa FROM SessaoAssentoJpaEntity sa " +
+            "JOIN FETCH sa.assento " +
+            "WHERE sa.id = :id")
+    Optional<SessaoAssentoJpaEntity> findByIdWithAssento(Long id);
 }

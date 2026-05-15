@@ -32,7 +32,7 @@ public class CadastrarUsuarioUseCaseImpl implements CadastrarUsuarioUseCase {
 
         Senha senha = Senha.criar(command.senha(), passwordEncoder);
         Usuario usuario = new Usuario(null, command.nome(), email, senha, Role.CLIENTE, true);
-        
+
         Usuario salvo = usuarioRepository.save(usuario);
         return jwtPort.gerar(salvo);
     }

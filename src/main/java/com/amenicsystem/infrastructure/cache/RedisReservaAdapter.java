@@ -20,6 +20,7 @@ public class RedisReservaAdapter implements ReservaAssentoPort {
     @Override
     public boolean reservar(SessaoId sessaoId, AssentoId assentoId, String identificador) {
         String key = reservationKey(sessaoId, assentoId);
+        if (identificador.equals(redisTemplate.opsForValue().get(key))) return true;
         // Salva a String genérica (pode ser o guestId ou usuarioId)
         Boolean success = redisTemplate.opsForValue()
                 .setIfAbsent(key, identificador, Duration.ofMinutes(10));
