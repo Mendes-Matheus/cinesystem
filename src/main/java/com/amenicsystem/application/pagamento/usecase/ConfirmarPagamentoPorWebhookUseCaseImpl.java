@@ -12,6 +12,7 @@ import com.amenicsystem.domain.filme.FilmeRepository;
 import com.amenicsystem.domain.ingresso.Ingresso;
 import com.amenicsystem.domain.ingresso.IngressoRepository;
 import com.amenicsystem.domain.pagamento.PagamentoRepository;
+import com.amenicsystem.domain.pagamento.StatusMercadoPago;
 import com.amenicsystem.domain.pagamento.StatusPagamento;
 import com.amenicsystem.domain.sessao.Sessao;
 import com.amenicsystem.domain.sessao.SessaoAssento;
@@ -41,45 +42,11 @@ public class ConfirmarPagamentoPorWebhookUseCaseImpl implements ConfirmarPagamen
     private final AssentoRepository assentoRepository;
     private final FilmeRepository filmeRepository;
 
-    /**
-     * Mapeamento dos status brutos do Mercado Pago para o domínio do CineSystem.
-     *
-     * Status MP → StatusPagamento:
-     *   approved     → APROVADO
-     *   pending      → PENDENTE
-     *   authorized   → AUTORIZADO
-     *   in_process   → EM_PROCESSO
-     *   in_mediation → EM_MEDIACAO
-     *   rejected     → REJEITADO
-     *   cancelled    → CANCELADO
-     *   refunded     → REEMBOLSADO
-     *   charged_back → CONTESTADO
-     *   (outros)     → DESCONHECIDO
-     */
-    private StatusPagamento mapearStatus(String statusMercadoPago) {
-        if (statusMercadoPago == null) return StatusPagamento.DESCONHECIDO;
-        return switch (statusMercadoPago.toLowerCase()) {
-            case "approved"     -> StatusPagamento.APROVADO;
-            case "pending"      -> StatusPagamento.PENDENTE;
-            case "authorized"   -> StatusPagamento.AUTORIZADO;
-            case "in_process"   -> StatusPagamento.EM_PROCESSO;
-            case "in_mediation" -> StatusPagamento.EM_MEDIACAO;
-            case "rejected"     -> StatusPagamento.REJEITADO;
-            case "cancelled"    -> StatusPagamento.CANCELADO;
-            case "refunded"     -> StatusPagamento.REEMBOLSADO;
-            case "charged_back" -> StatusPagamento.CONTESTADO;
-            default -> {
-                log.warn("Status desconhecido recebido do Mercado Pago: {}", statusMercadoPago);
-                yield StatusPagamento.DESCONHECIDO;
-            }
-        };
-    }
-
     @Override
     @Transactional
     public void execute(WebhookPagamentoCommand command) {
-        log.info("Processando webhook MP — paymentId={}, status={}",
-                command.paymentId(), command.statusMercadoPago());
+        log.info("Processando webhook MP — paymentId={}, status={}, notificationId={}",
+                command.paymentId(), command.statusMercadoPago(), command.notificationId());
 
         if (command.ingressoId() == null) {
             log.warn("IngressoId não encontrado no externalReference para paymentId={}", command.paymentId());
@@ -99,12 +66,23 @@ public class ConfirmarPagamentoPorWebhookUseCaseImpl implements ConfirmarPagamen
 
         // Idempotência: já processado
         if (pagamento.getStatus() != StatusPagamento.PENDENTE) {
-            log.info("Pagamento {} já processado (status={}). Ignorando notificação duplicada.",
-                    command.paymentId(), pagamento.getStatus());
+            log.info("Pagamento {} já processado (status={}). Ignorando notificação duplicada. notificationId={}",
+                    command.paymentId(), pagamento.getStatus(), command.notificationId());
             return;
         }
 
-        StatusPagamento novoStatus = mapearStatus(command.statusMercadoPago());
+        // Mapear status usando enum centralizado — elimina strings mágicas
+        StatusMercadoPago statusMP = StatusMercadoPago.fromStringOrNull(command.statusMercadoPago());
+        StatusPagamento novoStatus;
+
+        if (statusMP != null) {
+            novoStatus = statusMP.toDominio();
+        } else {
+            log.warn("Status desconhecido recebido do Mercado Pago: '{}'. paymentId={}",
+                    command.statusMercadoPago(), command.paymentId());
+            novoStatus = StatusPagamento.DESCONHECIDO;
+        }
+
         var ingresso = ingressoRepository.findById(pagamento.getIngressoId())
                 .orElseThrow(() -> new IllegalStateException(
                         "Ingresso não encontrado para pagamento " + command.paymentId()));

@@ -1,29 +1,45 @@
 package com.amenicsystem.interfaces.http.pagamento;
 
-import com.amenicsystem.application.pagamento.dto.WebhookPagamentoCommand;
-import com.amenicsystem.application.pagamento.usecase.ConfirmarPagamentoPorWebhookUseCase;
-import com.amenicsystem.application.port.out.ConsultaPagamentoResult;
-import com.amenicsystem.application.port.out.PagamentoGatewayPort;
+import com.amenicsystem.infrastructure.payment.mercadopago.MercadoPagoWebhookOrchestrator;
+import com.amenicsystem.interfaces.http.pagamento.dto.MercadoPagoWebhookPayloadDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 /**
  * Controller para receber notificações IPN/Webhook do Mercado Pago.
  *
- * Fluxo:
- *   1. O MP envia um POST com { type, data.id } para a notificationUrl configurada.
- *   2. Filtramos apenas eventos do tipo "payment".
- *   3. Consultamos o status real do pagamento na API do MP (nunca confiamos no payload).
- *   4. Extraímos o ingressoId do externalReference (formato: "ingresso-{id}").
- *   5. Delegamos ao use case de confirmação.
+ * <h3>Responsabilidade Única:</h3>
+ * <p>Este controller é <strong>extremamente fino</strong> — sua única responsabilidade é:</p>
+ * <ol>
+ *   <li>Receber a requisição HTTP (body, headers, query params)</li>
+ *   <li>Delegar ao {@link MercadoPagoWebhookOrchestrator}</li>
+ *   <li>Retornar HTTP 200 <strong>sempre</strong></li>
+ * </ol>
  *
- * Segurança:
- *   - O endpoint é público (sem JWT) pois o MP não autentica via Bearer.
- *   - A segurança é garantida pela consulta direta à API do MP (server-to-server).
+ * <p>Não contém nenhuma lógica de negócio, parsing, validação de assinatura,
+ * ou extração de IDs. Toda essa responsabilidade foi delegada aos componentes
+ * apropriados na camada de infraestrutura e aplicação.</p>
+ *
+ * <h3>Segurança:</h3>
+ * <ul>
+ *   <li><strong>Endpoint público</strong> — sem JWT, pois o Mercado Pago não autentica via Bearer.</li>
+ *   <li><strong>Validação HMAC-SHA256</strong> — delegada ao {@code SignatureValidator} via orquestrador.</li>
+ *   <li><strong>Consulta server-to-server</strong> — nunca confia no payload recebido.</li>
+ * </ul>
+ *
+ * <h3>HTTP 200 Constante:</h3>
+ * <p>O Mercado Pago reenvia notificações indefinidamente se não receber HTTP 200/201.
+ * Por isso, este endpoint <strong>sempre</strong> retorna 200, mesmo para:</p>
+ * <ul>
+ *   <li>Assinaturas inválidas (possível ataque)</li>
+ *   <li>Tipos de evento não suportados</li>
+ *   <li>Erros internos de processamento</li>
+ *   <li>Payloads malformados</li>
+ * </ul>
+ *
+ * @see MercadoPagoWebhookOrchestrator
  */
 @RestController
 @RequestMapping("/api/v1/mercadopago")
@@ -31,101 +47,36 @@ import java.util.Map;
 @Slf4j
 public class MercadoPagoWebhookController {
 
-    private final PagamentoGatewayPort pagamentoGateway;
-    private final ConfirmarPagamentoPorWebhookUseCase confirmarPagamentoUseCase;
+    private final MercadoPagoWebhookOrchestrator orchestrator;
 
     /**
-     * Recebe notificação IPN do Mercado Pago.
+     * Recebe notificação webhook do Mercado Pago.
      *
-     * O MP envia um JSON com:
-     * {
-     *   "action": "payment.created" | "payment.updated",
-     *   "type": "payment",
-     *   "data": { "id": "123456789" }
-     * }
+     * <p>O MP envia dois formatos de notificação:</p>
+     * <ul>
+     *   <li><strong>Webhooks V2:</strong> body com {@code type}, {@code data.id}, {@code action};
+     *       query params {@code type} e {@code data.id}; headers {@code x-signature} e {@code x-request-id}</li>
+     *   <li><strong>IPN legacy:</strong> body com {@code topic} e {@code resource}
+     *       (sem headers de assinatura)</li>
+     * </ul>
      *
-     * Também pode enviar via query params: ?type=payment&data.id=123456789
-     *
-     * Sempre retorna HTTP 200 para que o MP não reenvie a notificação indefinidamente.
+     * @param xSignature  header de assinatura HMAC do MP (pode ser null para IPN legacy)
+     * @param xRequestId  header de rastreabilidade do MP (pode ser null para IPN legacy)
+     * @param typeParam   query param {@code type} (fallback para extração do body)
+     * @param dataIdParam query param {@code data.id} (fallback para extração do body)
+     * @param payload     corpo da requisição deserializado em DTO tipado
+     * @return HTTP 200 sempre
      */
     @PostMapping("/notification")
     public ResponseEntity<Void> receberNotificacao(
+            @RequestHeader(value = "x-signature", required = false) String xSignature,
+            @RequestHeader(value = "x-request-id", required = false) String xRequestId,
             @RequestParam(value = "type", required = false) String typeParam,
             @RequestParam(value = "data.id", required = false) String dataIdParam,
-            @RequestBody(required = false) Map<String, Object> body) {
+            @RequestBody(required = false) MercadoPagoWebhookPayloadDTO payload) {
 
-        log.info("Webhook MP recebido — queryParams: type={}, data.id={}, body={}", typeParam, dataIdParam, body);
-
-        try {
-            // Extrair type e paymentId — o MP pode enviar via body ou query params
-            String type = typeParam;
-            String paymentId = dataIdParam;
-
-            if (body != null) {
-                if (type == null) {
-                    type = (String) body.get("type");
-                }
-                if (paymentId == null) {
-                    Object data = body.get("data");
-                    if (data instanceof Map<?, ?> dataMap) {
-                        Object id = dataMap.get("id");
-                        if (id != null) {
-                            paymentId = String.valueOf(id);
-                        }
-                    }
-                }
-            }
-
-            // Filtrar — só processamos eventos do tipo "payment"
-            if (!"payment".equalsIgnoreCase(type)) {
-                log.info("Notificação ignorada — tipo '{}' não é 'payment'.", type);
-                return ResponseEntity.ok().build();
-            }
-
-            if (paymentId == null || paymentId.isBlank()) {
-                log.warn("Notificação do tipo 'payment' recebida sem paymentId.");
-                return ResponseEntity.ok().build();
-            }
-
-            log.info("Processando notificação de pagamento — paymentId={}", paymentId);
-
-            // Consultar o status real na API do MP (nunca confiar no payload)
-            ConsultaPagamentoResult resultado = pagamentoGateway.consultarStatusPagamento(paymentId);
-
-            log.info("Status consultado na API do MP — paymentId={}, status={}, externalReference={}",
-                    paymentId, resultado.status(), resultado.externalReference());
-
-            // Extrair ingressoId do externalReference (formato: "ingresso-{id}")
-            Long ingressoId = extrairIngressoId(resultado.externalReference());
-
-            // Delegar ao use case
-            var command = new WebhookPagamentoCommand(paymentId, resultado.status(), ingressoId);
-            confirmarPagamentoUseCase.execute(command);
-
-            log.info("Webhook processado com sucesso — paymentId={}, ingressoId={}", paymentId, ingressoId);
-
-        } catch (Exception e) {
-            // Logar o erro mas SEMPRE retornar 200 para o MP não reenviar
-            log.error("Erro ao processar webhook do Mercado Pago: {}", e.getMessage(), e);
-        }
+        orchestrator.processar(payload, typeParam, dataIdParam, xSignature, xRequestId);
 
         return ResponseEntity.ok().build();
-    }
-
-    /**
-     * Extrai o ID numérico do ingresso a partir do externalReference.
-     * Formato esperado: "ingresso-{id}" (ex: "ingresso-49" → 49).
-     */
-    private Long extrairIngressoId(String externalReference) {
-        if (externalReference == null || !externalReference.startsWith("ingresso-")) {
-            log.warn("externalReference inválido ou ausente: '{}'", externalReference);
-            return null;
-        }
-        try {
-            return Long.parseLong(externalReference.substring("ingresso-".length()));
-        } catch (NumberFormatException e) {
-            log.warn("Não foi possível extrair ingressoId de externalReference: '{}'", externalReference);
-            return null;
-        }
     }
 }
