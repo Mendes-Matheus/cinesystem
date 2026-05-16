@@ -44,7 +44,6 @@ server:
 
 mercado-pago:
   access-token: ${MERCADOPAGO_ACCESS_TOKEN_PROD}
-  public-key: ${MERCADOPAGO_PUBLIC_KEY_PROD}
   back-url:
     success: ${MERCADOPAGO_BACK_URL_SUCCESS_PROD}
     pending: ${MERCADOPAGO_BACK_URL_PENDING_PROD}

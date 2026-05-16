@@ -45,7 +45,7 @@ server:
 mercado-pago:
   access-token: ${MERCADOPAGO_ACCESS_TOKEN_DEV}
   public-key: ${MERCADOPAGO_PUBLIC_KEY_DEV}
-  notification-url: ${MERCADOPAGO_NOTIFICATION_URL_DEV:https://pogo-spinach-protract.ngrok-free.dev/api/v1/webhooks/mercadopago}
+  notification-url: ${MERCADOPAGO_NOTIFICATION_URL_DEV}
   back-url:
     success: ${MERCADOPAGO_BACK_URL_SUCCESS_DEV}
     pending: ${MERCADOPAGO_BACK_URL_PENDING_DEV}
