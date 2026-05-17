@@ -4,6 +4,7 @@ import com.amenicsystem.application.ingresso.dto.CancelarIngressoCommand;
 import com.amenicsystem.domain.ingresso.Ingresso;
 import com.amenicsystem.domain.ingresso.IngressoRepository;
 import com.amenicsystem.domain.pagamento.PagamentoRepository;
+import com.amenicsystem.domain.pagamento.StatusPagamento;
 import com.amenicsystem.domain.shared.ResourceNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -34,10 +35,15 @@ public class CancelarIngressoUseCaseImpl implements CancelarIngressoUseCase {
         ingresso.cancelar();
         ingressoRepository.save(ingresso);
 
-        // 2. Busca o pagamento vinculado e realiza o estorno
+        // 2. Busca o pagamento vinculado e aplica transição via FSM
         pagamentoRepository.findByIngressoId(ingresso.getId())
                 .ifPresent(pagamento -> {
-                    pagamento.estornar();
+                    // Usar FSM: transicionarPara(REEMBOLSADO) se aprovado, ou CANCELADO se pendente
+                    if (pagamento.getStatus() == StatusPagamento.APROVADO) {
+                        pagamento.transicionarPara(StatusPagamento.REEMBOLSADO);
+                    } else {
+                        pagamento.transicionarPara(StatusPagamento.CANCELADO);
+                    }
                     pagamentoRepository.save(pagamento);
 
                     // TODO: Chamar um PagamentoGatewayPort para notificar a operadora do cartão

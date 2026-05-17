@@ -1,23 +1,33 @@
 package com.amenicsystem.application.pagamento.dto;
 
 /**
- * Command gerado a partir da notificação do Mercado Pago após validação e consulta server-to-server.
+ * Command gerado a partir da notificação do Mercado Pago após validação HMAC
+ * e consulta server-to-server à API do MP.
  *
- * <p><strong>IMPORTANTE:</strong> {@code paymentId} é o ID do PAGAMENTO (não da preference).
- * O webhook do MP envia {@code data.id} com o ID numérico do pagamento efetivado.
- * O status é consultado na API do MP usando esse ID — nunca confiamos no payload recebido.</p>
+ * <h3>Campos:</h3>
+ * <ul>
+ *   <li>{@code paymentId} — ID numérico do pagamento efetivado (data.id do webhook)</li>
+ *   <li>{@code statusMercadoPago} — status consultado diretamente na API do MP (nunca do payload)</li>
+ *   <li>{@code externalReference} — referência externa retornada pela API do MP (ex: "ingresso-49")</li>
+ *   <li>{@code notificationId} — ID único da notificação — apenas para logs e tracing</li>
+ * </ul>
  *
- * <p>O {@code notificationId} é usado para rastreabilidade e idempotência reforçada,
- * permitindo detectar notificações duplicadas antes mesmo de consultar o banco.</p>
+ * <h3>Correlação:</h3>
+ * <p>O {@code paymentId} é a identidade canônica. O {@code externalReference} é usado apenas
+ * como fallback one-time para correlacionar pagamentos antigos sem {@code payment_id} vinculado.</p>
  *
- * @param paymentId         ID numérico do pagamento (data.id do payload do webhook)
- * @param statusMercadoPago status consultado diretamente na API do MP — não o do payload
- * @param ingressoId        ID do ingresso associado ao pagamento (extraído do externalReference)
- * @param notificationId    ID único da notificação do MP — usado para logs e idempotência
+ * <h3>Segurança:</h3>
+ * <p>Todos os dados vêm da API do MP (server-to-server), não do payload do webhook.
+ * O orchestrator nunca propaga dados do payload sem validação.</p>
+ *
+ * @param paymentId         ID numérico do pagamento (data.id do webhook)
+ * @param statusMercadoPago status consultado na API do MP
+ * @param externalReference referência externa retornada pela API do MP
+ * @param notificationId    ID da notificação — apenas para logs/tracing, não é idempotency key
  */
 public record WebhookPagamentoCommand(
         String paymentId,
         String statusMercadoPago,
-        Long ingressoId,
+        String externalReference,
         String notificationId
 ) {}

@@ -4,54 +4,31 @@ import com.amenicsystem.application.pagamento.dto.WebhookPagamentoCommand;
 import com.amenicsystem.application.pagamento.usecase.ConfirmarPagamentoPorWebhookUseCase;
 import com.amenicsystem.application.port.out.ConsultaPagamentoResult;
 import com.amenicsystem.application.port.out.PagamentoGatewayPort;
+import com.amenicsystem.domain.shared.DuplicateWebhookException;
+import com.amenicsystem.domain.shared.InvalidPaymentTransitionException;
+import com.amenicsystem.domain.shared.WebhookException;
+import com.amenicsystem.domain.shared.WebhookValidationException;
 import com.amenicsystem.interfaces.http.pagamento.dto.MercadoPagoWebhookPayloadDTO;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 /**
- * Orquestrador do fluxo de processamento de webhooks do Mercado Pago.
+ * Orquestrador de infraestrutura para webhooks do Mercado Pago.
  *
- * <h3>Posição na Arquitetura:</h3>
- * <p>Reside na camada de <strong>infraestrutura</strong> porque coordena componentes de
- * infraestrutura (validator, parser, gateway) antes de delegar a regra de negócio
- * ao use case na camada de aplicação. O controller chama apenas este componente,
- * mantendo-se extremamente fino.</p>
+ * <p>Coordena exclusivamente componentes de infraestrutura. Não conhece regras de domínio,
+ * ingressoId, externalReference como identidade, nem FSM de pagamento.</p>
  *
- * <h3>Fluxo Completo:</h3>
+ * <h3>Fluxo:</h3>
  * <ol>
- *   <li><strong>Validar assinatura HMAC</strong> — rejeita notificações forjadas</li>
- *   <li><strong>Parsear e filtrar</strong> — extrai dados e ignora eventos não relevantes</li>
- *   <li><strong>Consultar status real</strong> — server-to-server via API do MP (nunca confia no payload)</li>
- *   <li><strong>Resolver ingressoId</strong> — extrai do externalReference via parser estruturado</li>
- *   <li><strong>Delegar ao use case</strong> — toda regra de negócio fica no application layer</li>
+ *   <li>Validar assinatura HMAC → {@link MercadoPagoWebhookSignatureValidator}</li>
+ *   <li>Parsear e filtrar evento → {@link MercadoPagoWebhookParser}</li>
+ *   <li>Consultar status real na API do MP → {@link PagamentoGatewayPort}</li>
+ *   <li>Montar command e delegar → {@link ConfirmarPagamentoPorWebhookUseCase}</li>
  * </ol>
  *
- * <h3>Observabilidade:</h3>
- * <p>Usa MDC (Mapped Diagnostic Context) para enriquecer todos os logs com
- * {@code paymentId}, {@code ingressoId}, {@code requestId} e {@code notificationId}.
- * Logs estruturados com prefixos de categoria para filtragem rápida:</p>
- * <ul>
- *   <li>{@code [WEBHOOK_RECEIVED]} — notificação chegou</li>
- *   <li>{@code [WEBHOOK_SIGNATURE_INVALID]} — falha de autenticação</li>
- *   <li>{@code [WEBHOOK_IGNORED]} — tipo não processável</li>
- *   <li>{@code [WEBHOOK_PROCESSED]} — sucesso</li>
- *   <li>{@code [WEBHOOK_ERROR]} — erro durante processamento</li>
- * </ul>
- *
- * <h3>Segurança:</h3>
- * <ul>
- *   <li>Validação HMAC-SHA256 com constant-time comparison</li>
- *   <li>Consulta server-to-server — nunca confia no payload do webhook</li>
- *   <li>Endpoint público (sem JWT) — MP não suporta Bearer</li>
- *   <li>Sempre retorna sem exceção — o controller garante HTTP 200</li>
- * </ul>
- *
- * <h3>Resiliência:</h3>
- * <p>O método {@link #processar} nunca lança exceção. Todos os erros são logados
- * e absorvidos internamente. Isso garante que o controller sempre retorne HTTP 200,
- * evitando retries infinitos do Mercado Pago.</p>
  */
 @Component
 @RequiredArgsConstructor
@@ -65,16 +42,7 @@ public class MercadoPagoWebhookOrchestrator {
 
     /**
      * Processa uma notificação webhook do Mercado Pago de ponta a ponta.
-     *
-     * <p>Este método <strong>nunca lança exceção</strong>. Todos os cenários de erro
-     * são logados e tratados internamente, garantindo que o controller sempre
-     * retorne HTTP 200 ao Mercado Pago.</p>
-     *
-     * @param payload     DTO tipado do corpo da requisição (pode ser null para IPN legacy)
-     * @param typeParam   query param {@code type} (pode ser null)
-     * @param dataIdParam query param {@code data.id} (pode ser null)
-     * @param xSignature  header {@code x-signature} para validação HMAC (pode ser null)
-     * @param xRequestId  header {@code x-request-id} para rastreabilidade (pode ser null)
+     * Nunca lança exceção — o controller sempre retorna HTTP 200.
      */
     public void processar(
             MercadoPagoWebhookPayloadDTO payload,
@@ -84,7 +52,7 @@ public class MercadoPagoWebhookOrchestrator {
             String xRequestId) {
 
         String notificationId = payload != null ? payload.getNotificationId() : "unknown";
-        configurarMDC(xRequestId, notificationId, null, null);
+        configurarMDC(xRequestId, notificationId);
 
         try {
             log.info("[WEBHOOK_RECEIVED] Webhook MP recebido — notificationId={}, type={}, dataId={}, action={}",
@@ -97,17 +65,13 @@ public class MercadoPagoWebhookOrchestrator {
             String dataIdParaValidacao = dataIdParam != null ? dataIdParam
                     : (payload != null ? payload.getPaymentId() : null);
 
-            if (!signatureValidator.validar(xSignature, xRequestId, dataIdParaValidacao)) {
-                log.warn("[WEBHOOK_SIGNATURE_INVALID] Notificação com assinatura inválida rejeitada — "
-                        + "notificationId={}, dataId={}, requestId={}",
-                        notificationId, dataIdParaValidacao, xRequestId);
-                return;
-            }
+            // Lança WebhookValidationException (non-retryable) se inválida
+            signatureValidator.validar(xSignature, xRequestId, dataIdParaValidacao);
 
-            // ── 2. Parsear e filtrar ──
+            // ── 2. Parsear e filtrar evento ──
             var parsedOpt = parser.parsear(payload, typeParam, dataIdParam);
             if (parsedOpt.isEmpty()) {
-                log.debug("[WEBHOOK_IGNORED] Notificação filtrada pelo parser — notificationId={}", notificationId);
+                // Evento filtrado (não é payment, ou IPN legacy sem suporte) — já logado no parser
                 return;
             }
 
@@ -115,63 +79,72 @@ public class MercadoPagoWebhookOrchestrator {
             String paymentId = parsed.paymentId();
             MDC.put("paymentId", paymentId);
 
-            log.info("[WEBHOOK_PROCESSING] Processando pagamento — paymentId={}, notificationId={}",
+            log.info("[WEBHOOK_PROCESSING] Consultando API do MP — paymentId={}, notificationId={}",
                     paymentId, notificationId);
 
             // ── 3. Consultar status real na API do MP (nunca confiar no payload) ──
             ConsultaPagamentoResult resultado = pagamentoGateway.consultarStatusPagamento(paymentId);
 
-            log.info("[WEBHOOK_CONSULTED] Status consultado na API do MP — paymentId={}, status={}, externalReference={}",
+            log.info("[WEBHOOK_CONSULTED] Status obtido da API MP — paymentId={}, status={}, externalRef={}",
                     paymentId, resultado.status(), resultado.externalReference());
 
-            // ── 4. Resolver ingressoId a partir do externalReference ──
-            Long ingressoId = parser.extrairIngressoId(resultado.externalReference());
-            MDC.put("ingressoId", ingressoId != null ? ingressoId.toString() : "null");
-
-            if (ingressoId == null) {
-                log.warn("[WEBHOOK_ERROR] Impossível determinar ingressoId a partir de externalReference='{}' "
-                        + "— pagamento não será processado. paymentId={}, notificationId={}",
-                        resultado.externalReference(), paymentId, notificationId);
-                return;
-            }
-
-            // ── 5. Montar command e delegar ao use case ──
+            // ── 4. Montar command e delegar ao use case ──
             var command = new WebhookPagamentoCommand(
                     paymentId,
                     resultado.status(),
-                    ingressoId,
+                    resultado.externalReference(),
                     notificationId
             );
 
             confirmarPagamentoUseCase.execute(command);
 
-            log.info("[WEBHOOK_PROCESSED] Webhook processado com sucesso — paymentId={}, ingressoId={}, "
-                    + "status={}, notificationId={}",
-                    paymentId, ingressoId, resultado.status(), notificationId);
+            log.info("[WEBHOOK_PROCESSED] Webhook processado — paymentId={}, status={}, notificationId={}",
+                    paymentId, resultado.status(), notificationId);
+
+        } catch (OptimisticLockException e) {
+            // Retryable: outro thread salvou a entidade entre o load e o save.
+            // O SELECT FOR UPDATE serializa webhooks no path principal, mas código fora
+            // do fluxo (ex: admin, CancelarIngresso) pode incrementar @Version concorrentemente.
+            // O MP retentará e o próximo lock garantirá consistência.
+            log.warn("[WEBHOOK_OPTIMISTIC_LOCK] Conflito de versão ao salvar pagamento — " +
+                    "notificationId={}, MP retentará automaticamente", notificationId);
+
+        } catch (DuplicateWebhookException e) {
+            // Non-retryable — já processado com sucesso anteriormente
+            log.info("[WEBHOOK_DUPLICATE] {} — notificationId={}", e.getMessage(), notificationId);
+
+        } catch (WebhookValidationException e) {
+            // Non-retryable — assinatura forjada ou malformada
+            log.warn("[WEBHOOK_SIGNATURE_INVALID] {} — notificationId={}", e.getMessage(), notificationId);
+
+        } catch (InvalidPaymentTransitionException e) {
+            // Non-retryable — FSM rejeitou transição (estado atual não permite)
+            log.warn("[WEBHOOK_INVALID_TRANSITION] {} — notificationId={}, paymentId={}",
+                    e.getMessage(), notificationId, e.getStatusAtual());
+
+        } catch (WebhookException e) {
+            // Outras WebhookException (non-retryable por padrão)
+            log.warn("[WEBHOOK_NON_RETRYABLE] {} — notificationId={}", e.getMessage(), notificationId);
 
         } catch (Exception e) {
-            // Absorver TODAS as exceções — o controller SEMPRE retorna 200
-            log.error("[WEBHOOK_ERROR] Erro ao processar webhook do Mercado Pago — "
-                    + "notificationId={}, erro={}", notificationId, e.getMessage(), e);
+            // Retryable ou desconhecido — MP retentará automaticamente
+            // Log ERROR com stack trace para alertar o time de operações
+            log.error("[WEBHOOK_ERROR] Erro ao processar webhook — notificationId={}, tipo={}, mensagem={}",
+                    notificationId, e.getClass().getSimpleName(), e.getMessage(), e);
+
         } finally {
             limparMDC();
         }
     }
 
-    /** Configura o MDC com dados de rastreabilidade. */
-    private void configurarMDC(String requestId, String notificationId,
-                                String paymentId, String ingressoId) {
-        if (requestId != null) MDC.put("requestId", requestId);
+    private void configurarMDC(String requestId, String notificationId) {
+        if (requestId != null && !requestId.isBlank()) MDC.put("requestId", requestId);
         if (notificationId != null) MDC.put("notificationId", notificationId);
-        if (paymentId != null) MDC.put("paymentId", paymentId);
-        if (ingressoId != null) MDC.put("ingressoId", ingressoId);
     }
 
-    /** Limpa o MDC ao final do processamento para não vazar entre threads. */
     private void limparMDC() {
         MDC.remove("requestId");
         MDC.remove("notificationId");
         MDC.remove("paymentId");
-        MDC.remove("ingressoId");
     }
 }

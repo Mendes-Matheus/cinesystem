@@ -1,5 +1,7 @@
 package com.amenicsystem.infrastructure.payment.mercadopago;
 
+import com.amenicsystem.domain.shared.WebhookValidationException;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -14,26 +16,29 @@ import java.security.NoSuchAlgorithmException;
 /**
  * Validador de assinatura HMAC-SHA256 para webhooks do Mercado Pago.
  *
- * <h3>Protocolo de Validação (conforme docs oficiais do MP):</h3>
+ * <h3>Protocolo (conforme docs oficiais do MP):</h3>
  * <ol>
- *   <li>Extrair {@code ts} (timestamp) e {@code v1} (hash) do header {@code x-signature}</li>
- *   <li>Construir o manifest: {@code id:[data.id];request-id:[x-request-id];ts:[ts];}</li>
- *   <li>Calcular HMAC-SHA256 usando a {@code webhook-secret} como chave</li>
- *   <li>Comparar em constant-time com o {@code v1} do header</li>
+ *   <li>Extrair {@code ts} (timestamp epoch SEGUNDOS) e {@code v1} (hash hex) de {@code x-signature}</li>
+ *   <li>Construir manifest: {@code id:[data.id];request-id:[x-request-id];ts:[ts];}</li>
+ *   <li>Calcular HMAC-SHA256 com a {@code webhook-secret} como chave</li>
+ *   <li>Comparar em constant-time com {@code v1}</li>
  * </ol>
  *
- * <h3>Decisões de Segurança:</h3>
- * <ul>
- *   <li><strong>Constant-time comparison:</strong> Usa {@link MessageDigest#isEqual} para
- *       prevenir timing attacks na comparação de hashes.</li>
- *   <li><strong>Tolerância de timestamp:</strong> Rejeita notificações com mais de 5 minutos
- *       de atraso para mitigar replay attacks. Valor configurável.</li>
- *   <li><strong>Não lança exceção:</strong> Retorna {@code false} para assinaturas inválidas.
- *       O controller sempre retorna HTTP 200 independentemente do resultado.</li>
- * </ul>
+ * <h3>Bug Crítico Corrigido — Comparação de Unidades:</h3>
+ * <p>O campo {@code ts} enviado pelo MP está em <strong>epoch segundos</strong>
+ * (ex: {@code 1663749600}). {@code System.currentTimeMillis()} retorna milissegundos.
+ * A comparação direta resultaria em diferença ~1.6×10¹², sempre acima da tolerância.
+ * <strong>Toda notificação legítima seria rejeitada em produção.</strong></p>
+ *
+ * <p>Correção: normalizar para a mesma unidade. Auto-detect por tamanho:
+ * ≤10 dígitos = segundos, >10 dígitos = milissegundos.</p>
+ *
+ * <h3>Guard de Configuração:</h3>
+ * <p>{@link #verificarConfiguracao()} valida ao startup se o secret está presente.
+ * Em ambiente de produção, a ausência do secret é logada como {@code ERROR} severo.</p>
  *
  * @see <a href="https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/webhooks">
- *      Documentação Oficial - Webhooks</a>
+ *      Documentação Oficial — Webhooks MP</a>
  */
 @Component
 @Slf4j
@@ -41,32 +46,56 @@ public class MercadoPagoWebhookSignatureValidator {
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 
-    /** Tolerância máxima para o timestamp da notificação (5 minutos em milissegundos). */
-    private static final long TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000L;
+    /** Tolerância para o timestamp da notificação (5 minutos em SEGUNDOS). */
+    private static final long TIMESTAMP_TOLERANCE_SECONDS = 5 * 60L;
 
     @Value("${mercado-pago.webhook-secret:}")
     private String webhookSecret;
 
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
+    /**
+     * Verificação de configuração ao startup.
+     * Loga ERROR severo se o secret estiver ausente em produção.
+     */
+    @PostConstruct
+    public void verificarConfiguracao() {
+        if (webhookSecret == null || webhookSecret.isBlank()) {
+            if ("prod".equals(activeProfile) || "production".equals(activeProfile)) {
+                log.error("[WEBHOOK_SECURITY_CRITICAL] *** ATENÇÃO DE SEGURANÇA *** " +
+                        "mercado-pago.webhook-secret não configurado em ambiente de produção (profile={}). " +
+                        "Toda validação de assinatura está DESABILITADA. " +
+                        "Configure a variável de ambiente MERCADOPAGO_SECRET_KEY_WEBHOOK imediatamente.",
+                        activeProfile);
+            } else {
+                log.warn("[WEBHOOK_SECURITY] webhook-secret não configurado (profile={}). " +
+                        "Validação de assinatura DESABILITADA — aceitável apenas em desenvolvimento.",
+                        activeProfile);
+            }
+        } else {
+            log.info("[WEBHOOK_SECURITY] webhook-secret configurado. Validação HMAC-SHA256 ativa.");
+        }
+    }
+
     /**
      * Valida a autenticidade de uma notificação do Mercado Pago.
      *
-     * @param xSignature  valor do header {@code x-signature} (formato: {@code ts=...,v1=...})
-     * @param xRequestId  valor do header {@code x-request-id}
-     * @param dataId      ID do recurso (query param {@code data.id})
-     * @return {@code true} se a assinatura for válida, {@code false} caso contrário
+     * @param xSignature  header {@code x-signature} (formato: {@code ts=...,v1=...})
+     * @param xRequestId  header {@code x-request-id}
+     * @param dataId      query param {@code data.id}
+     * @return {@code true} se válida
+     * @throws WebhookValidationException se assinatura inválida (non-retryable)
      */
     public boolean validar(String xSignature, String xRequestId, String dataId) {
-        // Se o secret não está configurado, pular validação com warning
         if (webhookSecret == null || webhookSecret.isBlank()) {
-            log.warn("[WEBHOOK_SECURITY] webhook-secret não configurado — validação de assinatura desabilitada. "
-                    + "Configure 'mercado-pago.webhook-secret' para ambiente de produção.");
+            // Secret não configurado — graceful degradation com warning (já logado no @PostConstruct)
             return true;
         }
 
         if (xSignature == null || xSignature.isBlank()) {
-            log.warn("[WEBHOOK_SECURITY] Header x-signature ausente — notificação potencialmente forjada. "
-                    + "dataId={}, requestId={}", dataId, xRequestId);
-            return false;
+            throw new WebhookValidationException(
+                    String.format("Header x-signature ausente — dataId=%s, requestId=%s", dataId, xRequestId));
         }
 
         // 1. Extrair ts e v1 do x-signature
@@ -74,106 +103,110 @@ public class MercadoPagoWebhookSignatureValidator {
         String v1 = null;
 
         for (String part : xSignature.split(",")) {
-            String[] keyValue = part.trim().split("=", 2);
-            if (keyValue.length == 2) {
-                String key = keyValue[0].trim();
-                String value = keyValue[1].trim();
-                if ("ts".equals(key)) {
-                    ts = value;
-                } else if ("v1".equals(key)) {
-                    v1 = value;
-                }
+            String[] kv = part.trim().split("=", 2);
+            if (kv.length == 2) {
+                String key = kv[0].trim();
+                String value = kv[1].trim();
+                if ("ts".equals(key)) ts = value;
+                else if ("v1".equals(key)) v1 = value;
             }
         }
 
         if (ts == null || v1 == null) {
-            log.warn("[WEBHOOK_SECURITY] Header x-signature com formato inválido — "
-                    + "ts ou v1 ausentes. xSignature='{}', dataId={}", xSignature, dataId);
-            return false;
+            throw new WebhookValidationException(
+                    String.format("Header x-signature com formato inválido (ts ou v1 ausentes): '%s', dataId=%s",
+                            xSignature, dataId));
         }
 
-        // 2. Validar timestamp (anti replay attack)
-        if (!validarTimestamp(ts, dataId)) {
-            return false;
-        }
+        // 2. Validar timestamp — CORRIGIDO: ambos em SEGUNDOS
+        validarTimestamp(ts, dataId);
 
-        // 3. Construir o manifest conforme documentação do MP
-        // Formato: id:[data.id];request-id:[x-request-id];ts:[ts];
+        // 3. Construir manifest conforme documentação MP
         String manifest = String.format("id:%s;request-id:%s;ts:%s;",
                 dataId != null ? dataId : "",
                 xRequestId != null ? xRequestId : "",
                 ts);
 
         // 4. Calcular HMAC-SHA256
-        String computedHash = calcularHmacSha256(manifest);
-        if (computedHash == null) {
-            log.error("[WEBHOOK_SECURITY] Falha ao calcular HMAC-SHA256 — erro interno. dataId={}", dataId);
-            return false;
-        }
+        String computedHash = calcularHmacSha256(manifest, dataId);
 
-        // 5. Comparar em constant-time
+        // 5. Comparar em constant-time (previne timing attacks)
         boolean valido = MessageDigest.isEqual(
                 computedHash.getBytes(StandardCharsets.UTF_8),
                 v1.getBytes(StandardCharsets.UTF_8));
 
         if (!valido) {
-            log.warn("[WEBHOOK_SECURITY] Assinatura HMAC inválida — notificação rejeitada. "
-                    + "dataId={}, requestId={}", dataId, xRequestId);
-        } else {
-            log.debug("[WEBHOOK_SECURITY] Assinatura HMAC válida. dataId={}, requestId={}", dataId, xRequestId);
+            throw new WebhookValidationException(
+                    String.format("Assinatura HMAC inválida — dataId=%s, requestId=%s", dataId, xRequestId));
         }
 
-        return valido;
+        log.debug("[WEBHOOK_SECURITY] Assinatura HMAC válida. dataId={}, requestId={}", dataId, xRequestId);
+        return true;
     }
 
     /**
-     * Valida se o timestamp da notificação está dentro da tolerância aceitável.
+     * Valida o timestamp contra a tolerância de 5 minutos.
      *
-     * @param ts     timestamp em milissegundos (string)
-     * @param dataId ID do recurso para logging
-     * @return true se o timestamp for aceitável
+     * <h3>Auto-detect de unidade (Bug Fix):</h3>
+     * <p>O MP envia {@code ts} em epoch <strong>segundos</strong> (10 dígitos típico).
+     * Para robustez, detectamos automaticamente: se o valor tem ≤10 dígitos, tratamos
+     * como segundos; se >10, como milissegundos. Ambos convertidos para segundos para
+     * comparação com {@code System.currentTimeMillis() / 1000}.</p>
+     *
+     * @param ts     valor do campo ts do x-signature
+     * @param dataId ID do recurso para contexto no log
+     * @throws WebhookValidationException se timestamp fora da tolerância ou inválido
      */
-    private boolean validarTimestamp(String ts, String dataId) {
+    private void validarTimestamp(String ts, String dataId) {
         try {
-            long notificationTimestamp = Long.parseLong(ts);
-            long now = System.currentTimeMillis();
-            long diff = Math.abs(now - notificationTimestamp);
+            long tsValue = Long.parseLong(ts.trim());
 
-            if (diff > TIMESTAMP_TOLERANCE_MS) {
-                log.warn("[WEBHOOK_SECURITY] Timestamp fora da tolerância — possível replay attack. "
-                        + "ts={}, now={}, diffMs={}, toleranceMs={}, dataId={}",
-                        ts, now, diff, TIMESTAMP_TOLERANCE_MS, dataId);
-                return false;
+            // Auto-detect: epoch seconds (≤10 dígitos) vs millis (>10 dígitos)
+            long tsEmSegundos = ts.trim().length() <= 10 ? tsValue : tsValue / 1000L;
+
+            // Comparação em segundos — elimina bug de unidades
+            long nowEmSegundos = System.currentTimeMillis() / 1000L;
+            long diffSegundos = Math.abs(nowEmSegundos - tsEmSegundos);
+
+            if (diffSegundos > TIMESTAMP_TOLERANCE_SECONDS) {
+                throw new WebhookValidationException(
+                        String.format("Timestamp fora da tolerância — possível replay attack. " +
+                                        "ts=%s (%ds), now=%ds, diff=%ds, tolerance=%ds, dataId=%s",
+                                ts, tsEmSegundos, nowEmSegundos, diffSegundos,
+                                TIMESTAMP_TOLERANCE_SECONDS, dataId));
             }
-            return true;
+
+            log.debug("[WEBHOOK_SECURITY] Timestamp válido. ts={}s, now={}s, diff={}s",
+                    tsEmSegundos, nowEmSegundos, diffSegundos);
+
         } catch (NumberFormatException e) {
-            log.warn("[WEBHOOK_SECURITY] Timestamp com formato inválido: '{}'. dataId={}", ts, dataId);
-            return false;
+            throw new WebhookValidationException(
+                    String.format("Timestamp com formato inválido: '%s', dataId=%s", ts, dataId));
         }
     }
 
     /**
-     * Calcula HMAC-SHA256 do manifest usando o webhook secret como chave.
+     * Calcula HMAC-SHA256 do manifest.
      *
-     * @param manifest string a ser assinada
-     * @return hash hexadecimal ou null em caso de erro
+     * @throws WebhookValidationException se o algoritmo ou chave forem inválidos —
+     *         erro interno que não deve aceitar o webhook silenciosamente
      */
-    private String calcularHmacSha256(String manifest) {
+    private String calcularHmacSha256(String manifest, String dataId) {
         try {
             Mac mac = Mac.getInstance(HMAC_ALGORITHM);
             SecretKeySpec keySpec = new SecretKeySpec(
                     webhookSecret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM);
             mac.init(keySpec);
-
             byte[] hashBytes = mac.doFinal(manifest.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(hashBytes);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            log.error("[WEBHOOK_SECURITY] Erro ao inicializar HMAC-SHA256: {}", e.getMessage(), e);
-            return null;
+            log.error("[WEBHOOK_SECURITY] Falha interna ao calcular HMAC-SHA256: {}", e.getMessage(), e);
+            throw new WebhookValidationException(
+                    "Falha interna ao calcular HMAC-SHA256 — dataId=" + dataId);
         }
     }
 
-    /** Converte array de bytes para string hexadecimal lowercase. */
+    /** Converte bytes para hexadecimal lowercase. */
     private static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder(bytes.length * 2);
         for (byte b : bytes) {

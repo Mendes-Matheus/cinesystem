@@ -9,36 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * Controller para receber notificações IPN/Webhook do Mercado Pago.
- *
- * <h3>Responsabilidade Única:</h3>
- * <p>Este controller é <strong>extremamente fino</strong> — sua única responsabilidade é:</p>
- * <ol>
- *   <li>Receber a requisição HTTP (body, headers, query params)</li>
- *   <li>Delegar ao {@link MercadoPagoWebhookOrchestrator}</li>
- *   <li>Retornar HTTP 200 <strong>sempre</strong></li>
- * </ol>
- *
- * <p>Não contém nenhuma lógica de negócio, parsing, validação de assinatura,
- * ou extração de IDs. Toda essa responsabilidade foi delegada aos componentes
- * apropriados na camada de infraestrutura e aplicação.</p>
- *
- * <h3>Segurança:</h3>
- * <ul>
- *   <li><strong>Endpoint público</strong> — sem JWT, pois o Mercado Pago não autentica via Bearer.</li>
- *   <li><strong>Validação HMAC-SHA256</strong> — delegada ao {@code SignatureValidator} via orquestrador.</li>
- *   <li><strong>Consulta server-to-server</strong> — nunca confia no payload recebido.</li>
- * </ul>
- *
- * <h3>HTTP 200 Constante:</h3>
- * <p>O Mercado Pago reenvia notificações indefinidamente se não receber HTTP 200/201.
- * Por isso, este endpoint <strong>sempre</strong> retorna 200, mesmo para:</p>
- * <ul>
- *   <li>Assinaturas inválidas (possível ataque)</li>
- *   <li>Tipos de evento não suportados</li>
- *   <li>Erros internos de processamento</li>
- *   <li>Payloads malformados</li>
- * </ul>
- *
  * @see MercadoPagoWebhookOrchestrator
  */
 @RestController

@@ -5,8 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Parser e filtro de notificações webhook do Mercado Pago.
@@ -14,39 +12,22 @@ import java.util.regex.Pattern;
  * <h3>Responsabilidades:</h3>
  * <ul>
  *   <li>Extrair {@code paymentId} e {@code type} do DTO tipado</li>
- *   <li>Aplicar merge com query params (fallback para notificações IPN legacy)</li>
+ *   <li>Aplicar merge com query params (fallback IPN legacy)</li>
  *   <li>Filtrar eventos — apenas {@code type = "payment"} é processado</li>
- *   <li>Resolver {@code ingressoId} a partir de {@code externalReference} via parser estruturado</li>
+ *   <li>Rejeitar IPN legacy explicitamente com log adequado</li>
  * </ul>
  *
- * <h3>Design — Extensibilidade:</h3>
- * <p>O formato do {@code externalReference} é parseado via regex, permitindo
- * extensão futura para múltiplos tipos (ex: {@code "assinatura-123"}, {@code "combo-456"})
- * sem alterar a interface pública.</p>
+ * <h3>IPN Legacy:</h3>
+ * <p>Notificações IPN legacy chegam com {@code topic} e {@code resource}, sem
+ * headers {@code x-signature} e {@code x-request-id}. Este sistema <strong>não suporta</strong>
+ * o formato IPN legacy — rejeitado explicitamente com log {@code WARN} para rastreabilidade.
+ * Use {@code ?source_news=webhooks} na notification-url para receber apenas Webhooks V2.</p>
  */
 @Component
 @Slf4j
 public class MercadoPagoWebhookParser {
 
-    /**
-     * Tipo de evento processado por este parser.
-     * Outros tipos (merchant_order, plan, etc.) são ignorados.
-     */
     private static final String TIPO_PAYMENT = "payment";
-
-    /**
-     * Regex para extrair o ID numérico do externalReference.
-     *
-     * <p>Formato esperado: {@code "ingresso-{id}"} onde {@code {id}} é um número Long.</p>
-     * <p>Exemplos válidos: {@code "ingresso-49"}, {@code "ingresso-123456"}</p>
-     *
-     * <p>Regex com grupo nomeado para clareza e extensibilidade:</p>
-     * <pre>
-     *   ^ingresso-(?<id>\d+)$
-     * </pre>
-     */
-    private static final Pattern EXTERNAL_REFERENCE_PATTERN =
-            Pattern.compile("^ingresso-(?<id>\\d+)$");
 
     /**
      * Dados parseados e validados de uma notificação de pagamento.
@@ -55,40 +36,44 @@ public class MercadoPagoWebhookParser {
      * @param notificationId ID da notificação para rastreabilidade
      * @param type           tipo do evento (sempre "payment" neste ponto)
      */
-    public record ParsedWebhookData(
-            String paymentId,
-            String notificationId,
-            String type
-    ) {}
+    public record ParsedWebhookData(String paymentId, String notificationId, String type) {}
 
     /**
-     * Parseia e valida o payload do webhook, aplicando merge com query params.
+     * Parseia, filtra e valida o payload do webhook.
+     * Retorna empty se o evento não deve ser processado.
      *
-     * <p>Retorna {@link Optional#empty()} se:</p>
-     * <ul>
-     *   <li>O tipo não é {@code "payment"}</li>
-     *   <li>O {@code paymentId} é ausente ou inválido</li>
-     *   <li>O payload é null</li>
-     * </ul>
-     *
-     * @param payload       DTO tipado do corpo da requisição (pode ser null)
-     * @param typeParam     query param {@code type} (fallback)
-     * @param dataIdParam   query param {@code data.id} (fallback)
-     * @return dados parseados ou empty se não deve ser processado
+     * @param payload       DTO tipado (pode ser null para IPN puro via query params)
+     * @param typeParam     query param {@code type}
+     * @param dataIdParam   query param {@code data.id}
+     * @return dados parseados ou empty se descartado
      */
     public Optional<ParsedWebhookData> parsear(
             MercadoPagoWebhookPayloadDTO payload,
             String typeParam,
             String dataIdParam) {
 
+        // Detectar e rejeitar IPN legacy explicitamente
+        if (isIpnLegacy(payload, typeParam)) {
+            String topic = payload != null ? payload.topic() : "null";
+            String resource = payload != null ? payload.resource() : "null";
+            log.warn("[IPN_LEGACY_NOT_SUPPORTED] Notificação IPN legacy recebida e ignorada. " +
+                            "topic='{}', resource='{}'. " +
+                            "Use '?source_news=webhooks' na notification-url para receber apenas Webhooks V2. " +
+                            "notificationId={}",
+                    topic, resource,
+                    payload != null ? payload.getNotificationId() : "unknown");
+            return Optional.empty();
+        }
+
         // Determinar type — prioridade: query param > body
         String type = resolverType(payload, typeParam);
 
         // Filtrar — apenas "payment" é processado
         if (!TIPO_PAYMENT.equalsIgnoreCase(type)) {
-            String tipoRecebido = type != null ? type : (payload != null ? payload.topic() : "null");
-            log.info("[WEBHOOK_PARSE] Notificação ignorada — tipo '{}' não é '{}'. "
-                    + "notificationId={}", tipoRecebido, TIPO_PAYMENT,
+            String tipoRecebido = type != null ? type : "null";
+            // DEBUG: merchant_order, plan, subscription são eventos esperados e comuns
+            log.debug("[WEBHOOK_IGNORED] Tipo '{}' ignorado — apenas '{}' é processado. notificationId={}",
+                    tipoRecebido, TIPO_PAYMENT,
                     payload != null ? payload.getNotificationId() : "unknown");
             return Optional.empty();
         }
@@ -97,8 +82,8 @@ public class MercadoPagoWebhookParser {
         String paymentId = resolverPaymentId(payload, dataIdParam);
 
         if (paymentId == null || paymentId.isBlank()) {
-            log.warn("[WEBHOOK_PARSE] Notificação do tipo 'payment' recebida sem paymentId. "
-                    + "notificationId={}", payload != null ? payload.getNotificationId() : "unknown");
+            log.warn("[WEBHOOK_PARSE] Notificação do tipo 'payment' sem paymentId. notificationId={}",
+                    payload != null ? payload.getNotificationId() : "unknown");
             return Optional.empty();
         }
 
@@ -111,58 +96,39 @@ public class MercadoPagoWebhookParser {
     }
 
     /**
-     * Extrai o ID numérico do ingresso a partir do {@code externalReference}
-     * retornado pela consulta server-to-server à API do Mercado Pago.
+     * Detecta se a notificação é IPN legacy (sem suporte neste sistema).
      *
-     * <p>Usa regex estruturado em vez de manipulação frágil de strings.
-     * Formato esperado: {@code "ingresso-{id}"} (ex: {@code "ingresso-49"} → {@code 49}).</p>
-     *
-     * <p>Extensível: novos formatos podem ser adicionados com matchers adicionais
-     * sem alterar a interface pública.</p>
-     *
-     * @param externalReference referência externa do pagamento
-     * @return ID do ingresso ou {@code null} se não for possível extrair
+     * <p>IPN legacy características:</p>
+     * <ul>
+     *   <li>Tem campo {@code topic} mas não tem {@code type}</li>
+     *   <li>Tem campo {@code resource} (URL ou ID do recurso)</li>
+     *   <li>Não envia headers {@code x-signature} / {@code x-request-id}</li>
+     * </ul>
      */
-    public Long extrairIngressoId(String externalReference) {
-        if (externalReference == null || externalReference.isBlank()) {
-            log.warn("[WEBHOOK_PARSE] externalReference ausente — impossível determinar ingressoId");
-            return null;
+    private boolean isIpnLegacy(MercadoPagoWebhookPayloadDTO payload, String typeParam) {
+        if (typeParam != null && !typeParam.isBlank()) {
+            return false; // Query param type presente → Webhooks V2
         }
-
-        Matcher matcher = EXTERNAL_REFERENCE_PATTERN.matcher(externalReference.trim());
-        if (!matcher.matches()) {
-            log.warn("[WEBHOOK_PARSE] externalReference com formato não reconhecido: '{}'. "
-                    + "Formato esperado: 'ingresso-{{id}}'", externalReference);
-            return null;
+        if (payload == null) {
+            return false;
         }
-
-        try {
-            return Long.parseLong(matcher.group("id"));
-        } catch (NumberFormatException e) {
-            log.warn("[WEBHOOK_PARSE] ID numérico inválido no externalReference: '{}'", externalReference);
-            return null;
-        }
+        // IPN legacy: topic presente, type ausente, resource presente
+        return payload.topic() != null && !payload.topic().isBlank()
+                && (payload.type() == null || payload.type().isBlank())
+                && payload.resource() != null && !payload.resource().isBlank();
     }
 
     /** Resolve o type com prioridade: query param → body (type) → body (topic). */
     private String resolverType(MercadoPagoWebhookPayloadDTO payload, String typeParam) {
-        if (typeParam != null && !typeParam.isBlank()) {
-            return typeParam;
-        }
-        if (payload != null) {
-            return payload.getNotificationType();
-        }
+        if (typeParam != null && !typeParam.isBlank()) return typeParam;
+        if (payload != null) return payload.getNotificationType();
         return null;
     }
 
     /** Resolve o paymentId com prioridade: query param → body (data.id). */
     private String resolverPaymentId(MercadoPagoWebhookPayloadDTO payload, String dataIdParam) {
-        if (dataIdParam != null && !dataIdParam.isBlank()) {
-            return dataIdParam;
-        }
-        if (payload != null) {
-            return payload.getPaymentId();
-        }
+        if (dataIdParam != null && !dataIdParam.isBlank()) return dataIdParam;
+        if (payload != null) return payload.getPaymentId();
         return null;
     }
 }

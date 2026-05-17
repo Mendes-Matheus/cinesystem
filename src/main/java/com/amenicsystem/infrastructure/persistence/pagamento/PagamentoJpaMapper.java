@@ -15,12 +15,15 @@ public class PagamentoJpaMapper {
                 .id(entity.getId() != null ? new PagamentoId(entity.getId()) : null)
                 .ingressoId(new IngressoId(entity.getIngressoId()))
                 .transacaoExternaId(entity.getTransacaoExternaId())
+                .paymentId(entity.getPaymentId())
                 .valor(entity.getValor())
                 .metodo(entity.getMetodo())
                 .status(entity.getStatus())
                 .dadosRetorno(entity.getDadosRetorno())
                 .criadoEm(entity.getCriadoEm())
                 .processadoEm(entity.getProcessadoEm())
+                .version(entity.getVersion())
+                .mpUltimaAtualizacao(entity.getMpUltimaAtualizacao())
                 .build();
     }
 
@@ -31,12 +34,15 @@ public class PagamentoJpaMapper {
                 .id(pagamento.getId() != null ? pagamento.getId().id() : null)
                 .ingressoId(pagamento.getIngressoId().id())
                 .transacaoExternaId(pagamento.getTransacaoExternaId())
+                .paymentId(pagamento.getPaymentId())
                 .valor(pagamento.getValor())
                 .metodo(pagamento.getMetodo())
                 .status(pagamento.getStatus())
                 .dadosRetorno(pagamento.getDadosRetorno())
                 .criadoEm(pagamento.getCriadoEm())
                 .processadoEm(pagamento.getProcessadoEm())
+                .version(pagamento.getVersion())
+                .mpUltimaAtualizacao(pagamento.getMpUltimaAtualizacao())
                 .build();
     }
 }
