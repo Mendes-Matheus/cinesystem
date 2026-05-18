@@ -1,7 +1,7 @@
 package com.amenicsystem;
 
 import com.amenicsystem.infrastructure.persistence.filme.FilmeJpaRepository;
-import com.amenicsystem.interfaces.http.filme.FilmeResponseDTO;
+import com.amenicsystem.interfaces.http.filme.dto.FilmeResponseDTO;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

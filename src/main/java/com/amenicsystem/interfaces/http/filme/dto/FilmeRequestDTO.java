@@ -1,4 +1,4 @@
-package com.amenicsystem.interfaces.http.filme;
+package com.amenicsystem.interfaces.http.filme.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

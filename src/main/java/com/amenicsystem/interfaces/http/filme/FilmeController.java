@@ -3,6 +3,8 @@ package com.amenicsystem.interfaces.http.filme;
 import com.amenicsystem.application.filme.dto.FilmeResult;
 import com.amenicsystem.application.filme.usecase.*;
 import com.amenicsystem.domain.filme.FilmeId;
+import com.amenicsystem.interfaces.http.filme.dto.FilmeRequestDTO;
+import com.amenicsystem.interfaces.http.filme.dto.FilmeResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

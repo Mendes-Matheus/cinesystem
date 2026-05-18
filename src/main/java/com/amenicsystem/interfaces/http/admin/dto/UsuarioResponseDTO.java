@@ -1,4 +1,4 @@
-package com.amenicsystem.interfaces.http.admin;
+package com.amenicsystem.interfaces.http.admin.dto;
 
 import java.time.LocalDateTime;
 

@@ -1,4 +1,4 @@
-package com.amenicsystem.interfaces.http.filme;
+package com.amenicsystem.interfaces.http.filme.dto;
 
 import java.time.LocalDate;
 

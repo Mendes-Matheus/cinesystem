@@ -3,6 +3,9 @@ package com.amenicsystem.interfaces.http.pagamento;
 import com.amenicsystem.application.pagamento.dto.IniciarPagamentoCommand;
 import com.amenicsystem.application.pagamento.dto.IniciarPagamentoResult;
 import com.amenicsystem.application.pagamento.dto.PagamentoResult;
+import com.amenicsystem.interfaces.http.pagamento.dto.IniciarPagamentoRequestDTO;
+import com.amenicsystem.interfaces.http.pagamento.dto.IniciarPagamentoResponseDTO;
+import com.amenicsystem.interfaces.http.pagamento.dto.PagamentoResponseDTO;
 import org.springframework.stereotype.Component;
 
 @Component

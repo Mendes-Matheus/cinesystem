@@ -1,4 +1,4 @@
-package com.amenicsystem.interfaces.http.pagamento;
+package com.amenicsystem.interfaces.http.pagamento.dto;
 
 import jakarta.validation.constraints.*;
 

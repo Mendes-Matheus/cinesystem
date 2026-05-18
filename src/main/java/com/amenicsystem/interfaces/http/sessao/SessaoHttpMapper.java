@@ -5,6 +5,9 @@ import com.amenicsystem.application.sessao.dto.CriarSessaoCommand;
 import com.amenicsystem.application.sessao.dto.SessaoResult;
 import com.amenicsystem.domain.filme.FilmeId;
 import com.amenicsystem.domain.sala.SalaId;
+import com.amenicsystem.interfaces.http.sessao.dto.AssentoResponseDTO;
+import com.amenicsystem.interfaces.http.sessao.dto.SessaoRequestDTO;
+import com.amenicsystem.interfaces.http.sessao.dto.SessaoResponseDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

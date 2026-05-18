@@ -7,6 +7,8 @@ import com.amenicsystem.application.usuario.usecase.DesativarUsuarioUseCase;
 import com.amenicsystem.application.usuario.usecase.ListarUsuariosUseCase;
 import com.amenicsystem.domain.sessao.SessaoId;
 import com.amenicsystem.domain.usuario.UsuarioId;
+import com.amenicsystem.interfaces.http.admin.dto.RelatorioSessaoResponseDTO;
+import com.amenicsystem.interfaces.http.admin.dto.UsuarioResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

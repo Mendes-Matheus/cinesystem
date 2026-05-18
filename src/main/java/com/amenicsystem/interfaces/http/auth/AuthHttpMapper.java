@@ -3,6 +3,9 @@ package com.amenicsystem.interfaces.http.auth;
 import com.amenicsystem.application.auth.dto.CadastroCommand;
 import com.amenicsystem.application.auth.dto.LoginCommand;
 import com.amenicsystem.application.auth.dto.TokenResult;
+import com.amenicsystem.interfaces.http.auth.dto.AuthRequestDTO;
+import com.amenicsystem.interfaces.http.auth.dto.AuthResponseDTO;
+import com.amenicsystem.interfaces.http.auth.dto.CadastroRequestDTO;
 import org.springframework.stereotype.Component;
 
 @Component

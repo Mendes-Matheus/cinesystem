@@ -1,4 +1,4 @@
-package com.amenicsystem.interfaces.http.sessao;
+package com.amenicsystem.interfaces.http.sessao.dto;
 
 import com.amenicsystem.domain.sessao.FormatoExibicao;
 import jakarta.validation.constraints.Future;

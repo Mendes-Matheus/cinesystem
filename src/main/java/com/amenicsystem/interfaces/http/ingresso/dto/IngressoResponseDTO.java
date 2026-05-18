@@ -1,4 +1,4 @@
-package com.amenicsystem.interfaces.http.ingresso;
+package com.amenicsystem.interfaces.http.ingresso.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

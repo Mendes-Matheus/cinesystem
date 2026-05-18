@@ -2,6 +2,8 @@ package com.amenicsystem.interfaces.http.admin;
 
 import com.amenicsystem.application.sessao.dto.RelatorioSessaoResult;
 import com.amenicsystem.application.usuario.dto.UsuarioResult;
+import com.amenicsystem.interfaces.http.admin.dto.RelatorioSessaoResponseDTO;
+import com.amenicsystem.interfaces.http.admin.dto.UsuarioResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 

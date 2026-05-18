@@ -1,4 +1,4 @@
-package com.amenicsystem.interfaces.http.sessao;
+package com.amenicsystem.interfaces.http.sessao.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

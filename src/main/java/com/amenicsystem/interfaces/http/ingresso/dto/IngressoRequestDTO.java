@@ -1,4 +1,4 @@
-package com.amenicsystem.interfaces.http.ingresso;
+package com.amenicsystem.interfaces.http.ingresso.dto;
 
 import com.amenicsystem.domain.ingresso.TipoIngresso;
 import com.amenicsystem.domain.pagamento.MetodoPagamento;

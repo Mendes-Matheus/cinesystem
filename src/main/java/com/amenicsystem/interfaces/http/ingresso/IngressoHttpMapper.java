@@ -7,6 +7,10 @@ import com.amenicsystem.application.ingresso.dto.IniciarCheckoutCommand;
 import com.amenicsystem.domain.assento.AssentoId;
 import com.amenicsystem.domain.sessao.SessaoId;
 import com.amenicsystem.domain.usuario.UsuarioId;
+import com.amenicsystem.interfaces.http.ingresso.dto.CheckoutRequestDTO;
+import com.amenicsystem.interfaces.http.ingresso.dto.IngressoBasicoResponseDTO;
+import com.amenicsystem.interfaces.http.ingresso.dto.IngressoRequestDTO;
+import com.amenicsystem.interfaces.http.ingresso.dto.IngressoResponseDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

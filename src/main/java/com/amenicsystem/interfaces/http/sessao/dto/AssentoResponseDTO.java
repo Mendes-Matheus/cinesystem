@@ -1,4 +1,4 @@
-package com.amenicsystem.interfaces.http.sessao;
+package com.amenicsystem.interfaces.http.sessao.dto;
 
 public record AssentoResponseDTO(
     Long id,

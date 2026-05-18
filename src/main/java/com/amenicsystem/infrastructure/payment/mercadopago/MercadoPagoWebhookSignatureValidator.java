@@ -24,15 +24,6 @@ import java.security.NoSuchAlgorithmException;
  *   <li>Comparar em constant-time com {@code v1}</li>
  * </ol>
  *
- * <h3>Bug Crítico Corrigido — Comparação de Unidades:</h3>
- * <p>O campo {@code ts} enviado pelo MP está em <strong>epoch segundos</strong>
- * (ex: {@code 1663749600}). {@code System.currentTimeMillis()} retorna milissegundos.
- * A comparação direta resultaria em diferença ~1.6×10¹², sempre acima da tolerância.
- * <strong>Toda notificação legítima seria rejeitada em produção.</strong></p>
- *
- * <p>Correção: normalizar para a mesma unidade. Auto-detect por tamanho:
- * ≤10 dígitos = segundos, >10 dígitos = milissegundos.</p>
- *
  * <h3>Guard de Configuração:</h3>
  * <p>{@link #verificarConfiguracao()} valida ao startup se o secret está presente.
  * Em ambiente de produção, a ausência do secret é logada como {@code ERROR} severo.</p>
@@ -52,7 +43,7 @@ public class MercadoPagoWebhookSignatureValidator {
     @Value("${mercado-pago.webhook-secret:}")
     private String webhookSecret;
 
-    @Value("${spring.profiles.active:dev}")
+    @Value("${spring.profiles.active}")
     private String activeProfile;
 
     /**

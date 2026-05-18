@@ -6,6 +6,8 @@ import com.amenicsystem.application.pagamento.usecase.BuscarPagamentoPorIngresso
 import com.amenicsystem.application.pagamento.usecase.IniciarPagamentoUseCase;
 import com.amenicsystem.domain.ingresso.IngressoId;
 import com.amenicsystem.domain.usuario.UsuarioId;
+import com.amenicsystem.interfaces.http.pagamento.dto.IniciarPagamentoRequestDTO;
+import com.amenicsystem.interfaces.http.pagamento.dto.IniciarPagamentoResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

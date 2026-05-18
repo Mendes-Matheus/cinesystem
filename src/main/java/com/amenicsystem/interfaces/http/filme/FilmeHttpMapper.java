@@ -6,6 +6,8 @@ import com.amenicsystem.application.filme.dto.FilmeResult;
 import com.amenicsystem.domain.filme.ClassificacaoEtaria;
 import com.amenicsystem.domain.filme.FilmeId;
 import com.amenicsystem.domain.filme.Genero;
+import com.amenicsystem.interfaces.http.filme.dto.FilmeRequestDTO;
+import com.amenicsystem.interfaces.http.filme.dto.FilmeResponseDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
